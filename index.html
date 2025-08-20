@@ -14,32 +14,8 @@
 <style>
 :root{--primary:#ffa0e5;--text:#ffffff;}
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  -webkit-user-select:none;
-  user-select:none;
-}
-
-/* Permitir interacción en inputs y botones */
-#lockOverlay input,
-#lockOverlay button {
-  -webkit-user-select:text !important;
-  user-select:text !important;
-  touch-action:auto !important;
-  pointer-events:auto !important;
-}
-
-html, body {
-  height: 100dvh;
-  width: 100%;
-  overflow: hidden;
-  font-family: 'Cormorant Garamond', serif;
-  color: var(--text);
-  transition: background .4s;
-  /* quitar touch-action:none y overscroll-behavior:none */
-}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamond',serif;color:var(--text);touch-action:none;overscroll-behavior:none;transition:background .4s}
 
 /*------------- LOCK -------------*/
 #lockOverlay{
@@ -50,11 +26,28 @@ html, body {
 #lockOverlay.fadeOut{opacity:0}
 #lockOverlay .heart{font-size:3.2rem;margin-bottom:.6rem;animation:fadeIn .8s forwards,heartbeat 1.8s infinite}
 #lockOverlay h2{font-family:'Dancing Script',cursive;font-size:2.2rem;animation:fadeIn .8s forwards}
-#lockOverlay input,#lockOverlay button{border:none;outline:none;font-size:1rem;font-family:'Cormorant Garamond',serif;}
-#lockOverlay input::placeholder{font-family:'Cormorant Garamond',serif;color:#ddd;}
-#lockOverlay input{margin-top:.5rem;padding:.45rem .7rem;border-radius:14px;text-align:center}
-#lockOverlay button{margin-top:.6rem;padding:.45rem 1rem;background:#00000015;backdrop-filter:blur(10px);color:#fff;border-radius:14px;cursor:pointer}
-@keyframes fadeIn{to{opacity:1}} @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+#lockOverlay input,#lockOverlay button{
+  all: unset;                  /* reset de todo lo que pueda bloquear input */
+  display: block;
+  width: auto;
+  padding: .45rem .7rem;
+  border-radius: 14px;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: #fff;
+  background: #00000033;
+  pointer-events: auto;
+  touch-action: auto;
+  user-select: text;
+  z-index: 100;
+}
+#lockOverlay input::placeholder{color:#ddd;}
+#lockOverlay button{cursor:pointer;}
+#lockOverlay #errorText{display:none;color:#ff8585;margin-top:.4rem}
+
+@keyframes fadeIn{to{opacity:1}} 
+@keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 
 /*------------- Slides -------------*/
 #slider{position:absolute;inset:0;width:100%;height:100%}
@@ -82,7 +75,7 @@ html, body {
 .bottomHalf h3{font-family:'Dancing Script',cursive;font-size:2rem;margin-top:.5rem}
 .bottomHalf .date{opacity:.85;margin-top:.2rem;text-transform:capitalize}
 
-/*------------- Nueva TopBar (frosted + transición) -------------*/
+/*------------- TopBar -------------*/
 .topBar{
   position:fixed;top:.75rem;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;
@@ -95,7 +88,6 @@ html, body {
   z-index:40;
 }
 .topBar.active{padding:.45rem 1.1rem;}
-
 #searchBtn{cursor:pointer;font-size:1.4rem}
 #searchInput{
   background:transparent;
@@ -119,13 +111,14 @@ html, body {
   animation: badgeShake 0.5s;
 }
 
+@keyframes badgeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-4px)}}
+
 /*------------- Flechas -------------*/
 .edge{position:absolute;top:0;width:50%;height:100%;z-index:10}
 #leftEdge{left:0;} #rightEdge{right:0;}
 .nav-btn{position:absolute;top:50%;transform:translateY(-50%);font-family:'Material Symbols Outlined';font-size:3rem;color:#fff;opacity:.15;pointer-events:none}
 #leftArrow{left:1rem;}#rightArrow{right:1rem;}
 
-@keyframes badgeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-4px)}}
 </style>
 </head>
 
@@ -136,25 +129,15 @@ html, body {
   <h2>SyA</h2>
   <input id="pwInput" type="password" placeholder="Inserte la contraseña">
   <button onclick="unlock()">Entrar</button>
-  <div id="errorText" style="display:none;color:#ff8585;margin-top:.4rem">Contraseña incorrecta</div>
+  <div id="errorText">Contraseña incorrecta</div>
 </div>
 
 <div id="slider">
   <div class="slide" data-title="Momento 1" data-desc="Descripción" data-date="2025-08-12"></div>
   <div class="slide" data-title="Momento 2" data-desc="Descripción" data-date="2025-08-13"></div>
   <div class="slide" data-title="Momento 3" data-desc="Descripción" data-date="2025-08-14"></div>
-  <div class="slide" data-title="Momento 4" data-desc="Descripción" data-date="2025-08-15"></div>
-  <div class="slide" data-title="Momento 5" data-desc="Descripción" data-date="2025-08-16"></div>
-  <div class="slide" data-title="Momento 6" data-desc="Descripción" data-date="2025-08-17"></div>
-  <div class="slide" data-title="Momento 7" data-desc="Descripción" data-date="2025-08-17"></div>
-  <div class="slide" data-title="Momento 8" data-desc="Descripción" data-date="2025-08-17"></div>
-  <div class="slide" data-title="Momento 9" data-desc="Descripción" data-date="2025-08-17"></div>
-  <div class="slide" data-title="Momento 10" data-desc="Descripción" data-date="2025-08-17"></div>
-  <div class="slide" data-title="Momento 11" data-desc="Descripción" data-date="2025-08-17"></div>
-  <div class="slide" data-title="Momento 12" data-desc="Descripción" data-date="2025-08-17"></div>
 </div>
 
-<!-- nueva topbar -->
 <div class="topBar" id="topBar">
   <span id="searchBtn" class="material-symbols-outlined">search</span>
   <input id="searchInput" type="number" inputmode="numeric" min="1">
@@ -169,7 +152,7 @@ html, body {
 
 <script>
 let lockEnabled=false;
-let theme=document.getElementById('themeColor');
+const theme=document.getElementById('themeColor');
 
 async function hashPassword(password){
   const encoder=new TextEncoder();
@@ -186,32 +169,24 @@ const slides=document.querySelectorAll('.slide'),
       topBar=document.getElementById('topBar');
 
 const months=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-const bgColors=[];
-let hue=Math.floor(Math.random()*360), step=360/slides.length;
-
-for(let i=0;i<slides.length;i++){
-  const base=`hsl(${hue},65%,86%)`, dark=`hsl(${hue},65%,78%)`;
-  bgColors.push(`linear-gradient(${base},${dark})`);
-  hue=(hue+step)%360;
-}
-
-document.documentElement.style.background=bgColors[0];
-let solidColor0=bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
-theme.setAttribute('content',solidColor0);
-document.getElementById('lockOverlay').style.background=bgColors[0];
+const bgColors = ["#ffe0f0","#ffc0e0","#ffa0e5"];
 
 slides.forEach((s,i)=>{
   s.style.background=bgColors[i];
   const d=new Date(s.dataset.date);
   const div=document.createElement('div');
   div.className='content';
-  div.innerHTML=`<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
+  div.innerHTML=`<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div>
+  <div class="bottomHalf"><h3>${s.dataset.title}</h3>
+  <div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
   s.appendChild(div);
 });
 
 let current=0;
 slides[current].classList.add('active');
 counter.textContent=`1 / ${slides.length}`;
+document.documentElement.style.background=bgColors[current];
+theme.setAttribute('content',bgColors[current]);
 
 async function unlock(){
   const input=document.getElementById('pwInput').value;
@@ -223,14 +198,10 @@ async function unlock(){
   const o=document.getElementById('lockOverlay');
   o.querySelector('.heart').style.animation="none";
   o.classList.add('fadeOut');
-  setTimeout(()=>{
-    o.remove();
-    lockEnabled=true;
-    showBadge();
-  },400);
+  setTimeout(()=>{o.remove(); lockEnabled=true;},400);
 }
 
-document.getElementById('pwInput').addEventListener('keypress',async function(e){if(e.key==='Enter') await unlock();});
+document.getElementById('pwInput').addEventListener('keypress',async e=>{if(e.key==='Enter') await unlock();});
 
 function changeSlide(d){
   if(!lockEnabled) return;
@@ -238,14 +209,7 @@ function changeSlide(d){
   current=(current+d+slides.length)%slides.length;
   slides[current].classList.add('active');
   document.documentElement.style.background=bgColors[current];
-
-  // Fade theme-color
-  const solidColor=bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
-  const metaClone=theme.cloneNode(true);
-  metaClone.setAttribute('content',solidColor);
-  theme.parentNode.replaceChild(metaClone,theme);
-  theme=metaClone;
-
+  theme.setAttribute('content',bgColors[current]);
   counter.textContent=(current+1)+' / '+slides.length;
 }
 
@@ -272,27 +236,21 @@ searchIn.addEventListener('keypress',function(e){
   if(e.key==='Enter'){
     const n=parseInt(this.value);
     if(n>=1&&n<=slides.length){
-      if(!lockEnabled) return;
-      slides[current].classList.remove('active');
-      current=n-1;
-      slides[current].classList.add('active');
-
-      document.documentElement.style.background=bgColors[current];
-      const solidColor=bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
-      const metaClone=theme.cloneNode(true);
-      metaClone.setAttribute('content',solidColor);
-      theme.parentNode.replaceChild(metaClone,theme);
-      theme=metaClone;
-
-      counter.textContent=(current+1)+' / '+slides.length;
+      changeSlide(n-1-current);
       resetSearch();
     }
   }
 });
 
-searchIn.onchange=()=>{const n=parseInt(searchIn.value); if(n>=1&&n<=slides.length) changeSlide((n-1)-current); resetSearch();}
-function resetSearch(){searchIn.classList.remove('show'); searchIn.value=''; setTimeout(()=>topBar.classList.remove('active'),300);}
-window.addEventListener('click',e=>{if(e.target!==searchBtn&&e.target!==searchIn&&searchIn.classList.contains('show')) resetSearch();});
+function resetSearch(){
+  searchIn.classList.remove('show');
+  searchIn.value='';
+  setTimeout(()=>topBar.classList.remove('active'),300);
+}
+
+window.addEventListener('click',e=>{
+  if(e.target!==searchBtn&&e.target!==searchIn&&searchIn.classList.contains('show')) resetSearch();
+});
 
 function showBadge(){
   const b=document.getElementById('newBadge');
@@ -300,14 +258,10 @@ function showBadge(){
   if(slides.length>slidesSeen){
     b.style.display='inline-block';
     setTimeout(()=>{
-      b.style.animation="badgeShake 0.5s";
+      b.style.animation="badgeShake .5s";
       setTimeout(()=>{
         b.style.animation="";
-        const hideOnClick=function(){
-          b.style.display='none';
-          localStorage.setItem('slidesSeen',slides.length);
-          document.removeEventListener('click',hideOnClick);
-        };
+        const hideOnClick=function(){b.style.display='none';localStorage.setItem('slidesSeen',slides.length);document.removeEventListener('click',hideOnClick);}
         document.addEventListener('click',hideOnClick,{once:true});
       },500);
     },3000);
