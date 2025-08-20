@@ -83,20 +83,21 @@ input, button, textarea, select {
   font-size: 1rem;
   font-family: 'Cormorant Garamond', serif;
   border: none;
-  background: #ffffff15; /* opcional para visibilidad */
+  background: #ffffff20; /* opcional para visibilidad */
 }
 
 #lockOverlay input::placeholder {
-  color: #ffffff50;
+  color: #00000020;
   font-family: 'Cormorant Garamond', serif;
 }
 
 #lockOverlay button {
   margin-top: .6rem;
   padding: .45rem 1rem;
-  background: #00000015;
-  backdrop-filter: blur(10px);
-  color: #fff;
+  background: #fff;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   border-radius: 14px;
   border: 0;
   cursor: pointer;
@@ -143,7 +144,7 @@ input, button, textarea, select {
 .topBar{
   position:fixed;top:.75rem;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;
-  background:#ffffff15;
+  background:#ffffff20;
   backdrop-filter:blur(10px);
   padding:.45rem 1.1rem;
   border-radius:14px;
