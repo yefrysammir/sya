@@ -259,9 +259,9 @@ for (let i = 0; i < slides.length; i++) {
   hue = (hue + step) % 360;
 }
 
-// Fondo inicial y theme-color
+// Fondo inicial y theme-color como estaba en tu original
 document.documentElement.style.background = bgColors[0];
-const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0]; // color sólido del gradiente
+const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
 theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
@@ -280,7 +280,7 @@ slides.forEach((s, i) => {
 
   function tryNext(idx) {
     if (idx >= extensions.length) {
-      img.src = 'momentos/foto0.JPG'; // fallback final
+      img.src = 'momentos/foto0.jpg'; // fallback final
       return;
     }
     const testSrc = `momentos/foto${i+1}${extensions[idx]}`;
@@ -292,11 +292,18 @@ slides.forEach((s, i) => {
 
   tryNext(0); // iniciar prueba de extensiones
 
-  div.innerHTML = `<div class="topHalf"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
+  // Mantener bottomHalf exactamente como en tu original
+  div.innerHTML = `<div class="topHalf"></div>
+                   <div class="bottomHalf">
+                     <h3>${s.dataset.title}</h3>
+                     <div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
+                     <p>${s.dataset.desc}</p>
+                   </div>`;
   div.querySelector('.topHalf').appendChild(img);
   s.appendChild(div);
 });
 
+// Contador inicial exactamente como antes
 let current = 0;
 slides[current].classList.add('active');
 counter.textContent = `1 / ${slides.length}`;
@@ -335,10 +342,8 @@ function changeSlide(d) {
   current = (current + d + slides.length) % slides.length;
   slides[current].classList.add('active');
 
-  // Cambiar el fondo de la página
+  // Fondo y theme-color como en original
   document.documentElement.style.background = bgColors[current];
-
-  // Cambiar theme-color usando color sólido del gradiente
   const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
   theme.setAttribute('content', solidColor);
 
