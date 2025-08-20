@@ -225,6 +225,7 @@ input, button, textarea, select {
 <div id="leftArrow" class="nav-btn">chevron_left</div>
 <div id="rightArrow" class="nav-btn">chevron_right</div>
 
+
 <script>
 let lockEnabled=false;
 const theme=document.getElementById('themeColor');
@@ -263,13 +264,35 @@ const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0]; // color sóli
 theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
-// contenido slides
+// contenido slides con soporte para varias extensiones
 slides.forEach((s, i) => {
   s.style.background = bgColors[i];
   const d = new Date(s.dataset.date);
   const div = document.createElement('div');
   div.className = 'content';
-  div.innerHTML = `<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
+
+  // crear img con fallback inteligente
+  const img = document.createElement('img');
+  img.className = 'polaroid';
+  const extensions = ['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG'];
+  let loaded = false;
+
+  function tryNext(idx) {
+    if (idx >= extensions.length) {
+      img.src = 'momentos/foto0.jpg'; // fallback final
+      return;
+    }
+    const testSrc = `momentos/foto${i+1}${extensions[idx]}`;
+    const tmp = new Image();
+    tmp.onload = () => { img.src = testSrc; loaded = true; };
+    tmp.onerror = () => { if(!loaded) tryNext(idx+1); };
+    tmp.src = testSrc;
+  }
+
+  tryNext(0); // iniciar prueba de extensiones
+
+  div.innerHTML = `<div class="topHalf"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
+  div.querySelector('.topHalf').appendChild(img);
   s.appendChild(div);
 });
 
