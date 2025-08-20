@@ -96,7 +96,7 @@ input, button, textarea, select {
 #lockOverlay button {
   margin-top: .6rem;
   padding: .45rem 1rem;
-  background: #00000050;
+  background: #00000025;
   color: var(--text);
   border-radius: 14px;
   border: 0;
@@ -138,7 +138,7 @@ input, button, textarea, select {
 }
 
 .bottomHalf h3{font-family:'Dancing Script',cursive;font-size:2rem;margin-top:.5rem}
-.bottomHalf .date{opacity:.85;margin-top:.2rem;text-transform:capitalize}
+.bottomHalf .date{opacity:.50;margin-top:.2rem;text-transform:capitalize}
 
 /*------------- Nueva TopBar (frosted + transición) -------------*/
 .topBar{
@@ -158,7 +158,7 @@ input, button, textarea, select {
 #searchInput{
   background:transparent;
   border:none;
-  color:var(--text2);
+  color:var(--text);
   font-size:1rem;
   margin-left:.5rem;
   width:0;
@@ -180,7 +180,7 @@ input, button, textarea, select {
 /*------------- Flechas -------------*/
 .edge{position:absolute;top:0;width:50%;height:100%;z-index:10}
 #leftEdge{left:0;} #rightEdge{right:0;}
-.nav-btn{position:absolute;top:50%;transform:translateY(-50%);font-family:'Material Symbols Outlined';font-size:3rem;color:#fff;opacity:1;pointer-events:none}
+.nav-btn{position:absolute;top:50%;transform:translateY(-50%);font-family:'Material Symbols Outlined';font-size:3rem;color:var(--text);opacity:.25;pointer-events:none}
 #leftArrow{left:1rem;}#rightArrow{right:1rem;}
 
 @keyframes badgeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-4px)}}
