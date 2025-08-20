@@ -14,8 +14,25 @@
 <style>
 :root{--primary:#ffa0e5;--text:#ffffff;}
 
-*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
-html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamond',serif;color:var(--text);overscroll-behavior:none;touch-action:none;transition:background .4s}
+*{
+  margin:0;padding:0;box-sizing:border-box;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+/* Permitir interacción en inputs y textarea */
+input, textarea {
+  -webkit-user-select:text !important;
+  user-select:text !important;
+  touch-action:auto !important;
+}
+
+html,body{
+  height:100dvh;width:100%;overflow:hidden;
+  font-family:'Cormorant Garamond',serif;color:var(--text);
+  transition:background .4s;
+  overscroll-behavior:none;
+}
 
 /*------------- LOCK -------------*/
 #lockOverlay{
@@ -27,7 +44,7 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
 #lockOverlay .heart{font-size:3.2rem;margin-bottom:.6rem;animation:fadeIn .8s forwards,heartbeat 1.8s infinite}
 #lockOverlay h2{font-family:'Dancing Script',cursive;font-size:2.2rem;animation:fadeIn .8s forwards}
 #lockOverlay input,#lockOverlay button{border:none;outline:none;font-size:1rem;font-family:'Cormorant Garamond',serif;}
-#lockOverlay input::placeholder{font-family:'Cormorant Garamond',serif;color:#ddd;} /* ✅ misma fuente */
+#lockOverlay input::placeholder{font-family:'Cormorant Garamond',serif;color:#ddd;}
 #lockOverlay input{margin-top:.5rem;padding:.45rem .7rem;border-radius:14px;text-align:center}
 #lockOverlay button{margin-top:.6rem;padding:.45rem 1rem;background:#00000015;backdrop-filter:blur(10px);color:#fff;border-radius:14px;cursor:pointer}
 @keyframes fadeIn{to{opacity:1}} @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
@@ -46,18 +63,13 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
   border-bottom-width: 22px;
   box-shadow: 0 14px 18px -8px rgba(0,0,0,.35);
   pointer-events: none;
-  /* Añade estas propiedades para la animación */
   animation: float 6s ease-in-out infinite;
   transform-origin: center;
 }
 
 @keyframes float {
-  0%, 100% { 
-    transform: translateY(0) rotate(0deg); 
-  }
-  50% { 
-    transform: translateY(-10px) rotate(1deg); 
-  }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
 }
 
 .bottomHalf h3{font-family:'Dancing Script',cursive;font-size:2rem;margin-top:.5rem}
@@ -75,7 +87,7 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
   overflow:hidden;
   z-index:40;
 }
-.topBar.active{padding:.45rem 1.1rem;} /* se utiliza cuando aparece el input */
+.topBar.active{padding:.45rem 1.1rem;}
 
 #searchBtn{cursor:pointer;font-size:1.4rem}
 #searchInput{
@@ -114,7 +126,7 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
 
 <div id="lockOverlay">
   <span class="material-symbols-outlined heart">partner_heart</span>
-  <h2>SyA v1.0.5</h2>
+  <h2>SyA</h2>
   <input id="pwInput" type="password" placeholder="Inserte la contraseña">
   <button onclick="unlock()">Entrar</button>
   <div id="errorText" style="display:none;color:#ff8585;margin-top:.4rem">Contraseña incorrecta</div>
@@ -127,12 +139,12 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
   <div class="slide" data-title="Momento 4" data-desc="Descripción" data-date="2025-08-15"></div>
   <div class="slide" data-title="Momento 5" data-desc="Descripción" data-date="2025-08-16"></div>
   <div class="slide" data-title="Momento 6" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 7" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 8" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 9" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 10" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 11" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 12" data-desc="Descripción" data-date="2025-08-17"></div>
+  <div class="slide" data-title="Momento 7" data-desc="Descripción" data-date="2025-08-17"></div>
+  <div class="slide" data-title="Momento 8" data-desc="Descripción" data-date="2025-08-17"></div>
+  <div class="slide" data-title="Momento 9" data-desc="Descripción" data-date="2025-08-17"></div>
+  <div class="slide" data-title="Momento 10" data-desc="Descripción" data-date="2025-08-17"></div>
+  <div class="slide" data-title="Momento 11" data-desc="Descripción" data-date="2025-08-17"></div>
+  <div class="slide" data-title="Momento 12" data-desc="Descripción" data-date="2025-08-17"></div>
 </div>
 
 <!-- nueva topbar -->
@@ -150,178 +162,152 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
 
 <script>
 let lockEnabled=false;
-const theme=document.getElementById('themeColor');
+let theme=document.getElementById('themeColor');
 
-// Función para hashear con SHA-256
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+async function hashPassword(password){
+  const encoder=new TextEncoder();
+  const data=encoder.encode(password);
+  const hashBuffer=await crypto.subtle.digest('SHA-256',data);
+  const hashArray=Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// slides y fondos
-const slides = document.querySelectorAll('.slide'),
-      counter = document.getElementById('counter'),
-      searchBtn = document.getElementById('searchBtn'),
-      searchIn = document.getElementById('searchInput'),
-      topBar = document.getElementById('topBar');
+const slides=document.querySelectorAll('.slide'),
+      counter=document.getElementById('counter'),
+      searchBtn=document.getElementById('searchBtn'),
+      searchIn=document.getElementById('searchInput'),
+      topBar=document.getElementById('topBar');
 
-const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-const bgColors = [];
-let hue = Math.floor(Math.random() * 360),
-    step = 360 / slides.length;
+const months=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const bgColors=[];
+let hue=Math.floor(Math.random()*360), step=360/slides.length;
 
-for (let i = 0; i < slides.length; i++) {
-  const base = `hsl(${hue},65%,86%)`,
-        dark = `hsl(${hue},65%,78%)`;
+for(let i=0;i<slides.length;i++){
+  const base=`hsl(${hue},65%,86%)`, dark=`hsl(${hue},65%,78%)`;
   bgColors.push(`linear-gradient(${base},${dark})`);
-  hue = (hue + step) % 360;
+  hue=(hue+step)%360;
 }
 
-// Fondo inicial y theme-color
-document.documentElement.style.background = bgColors[0];
-const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0]; // color sólido del gradiente
-theme.setAttribute('content', solidColor0);
-document.getElementById('lockOverlay').style.background = bgColors[0];
+document.documentElement.style.background=bgColors[0];
+let solidColor0=bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
+theme.setAttribute('content',solidColor0);
+document.getElementById('lockOverlay').style.background=bgColors[0];
 
-// contenido slides
-slides.forEach((s, i) => {
-  s.style.background = bgColors[i];
-  const d = new Date(s.dataset.date);
-  const div = document.createElement('div');
-  div.className = 'content';
-  div.innerHTML = `<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
+slides.forEach((s,i)=>{
+  s.style.background=bgColors[i];
+  const d=new Date(s.dataset.date);
+  const div=document.createElement('div');
+  div.className='content';
+  div.innerHTML=`<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
   s.appendChild(div);
 });
 
-let current = 0;
+let current=0;
 slides[current].classList.add('active');
-counter.textContent = `1 / ${slides.length}`;
+counter.textContent=`1 / ${slides.length}`;
 
-// Unlock con contraseña cifrada
-async function unlock() {
-  const input = document.getElementById('pwInput').value;
-  const hashedInput = await hashPassword(input);
-
-  if (hashedInput !== "0c65c03acbe8814cd741385a8745fb0b26306d8a8a709f1e2752bf0224e5dc9e") {
-    document.getElementById('errorText').style.display = 'block';
+async function unlock(){
+  const input=document.getElementById('pwInput').value;
+  const hashedInput=await hashPassword(input);
+  if(hashedInput!=="0c65c03acbe8814cd741385a8745fb0b26306d8a8a709f1e2752bf0224e5dc9e"){
+    document.getElementById('errorText').style.display='block';
     return;
   }
-
-  const o = document.getElementById('lockOverlay');
-  o.querySelector('.heart').style.animation = "none";
+  const o=document.getElementById('lockOverlay');
+  o.querySelector('.heart').style.animation="none";
   o.classList.add('fadeOut');
-  setTimeout(() => {
+  setTimeout(()=>{
     o.remove();
-    lockEnabled = true;
+    lockEnabled=true;
     showBadge();
-  }, 400);
+  },400);
 }
 
-// Activar con tecla Enter
-document.getElementById('pwInput').addEventListener('keypress', async function(e) {
-  if (e.key === 'Enter') {
-    await unlock();
-  }
-});
+document.getElementById('pwInput').addEventListener('keypress',async function(e){if(e.key==='Enter') await unlock();});
 
-// slide nav
-function changeSlide(d) {
-  if (!lockEnabled) return;
+function changeSlide(d){
+  if(!lockEnabled) return;
   slides[current].classList.remove('active');
-  current = (current + d + slides.length) % slides.length;
+  current=(current+d+slides.length)%slides.length;
   slides[current].classList.add('active');
+  document.documentElement.style.background=bgColors[current];
 
-  // Cambiar el fondo de la página
-  document.documentElement.style.background = bgColors[current];
+  // Fade theme-color
+  const solidColor=bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
+  const metaClone=theme.cloneNode(true);
+  metaClone.setAttribute('content',solidColor);
+  theme.parentNode.replaceChild(metaClone,theme);
+  theme=metaClone;
 
-  // Cambiar theme-color usando color sólido del gradiente
-  const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
-  theme.setAttribute('content', solidColor);
-
-  counter.textContent = (current + 1) + ' / ' + slides.length;
+  counter.textContent=(current+1)+' / '+slides.length;
 }
 
-leftEdge.onclick = () => changeSlide(-1);
-rightEdge.onclick = () => changeSlide(1);
+leftEdge.onclick=()=>changeSlide(-1);
+rightEdge.onclick=()=>changeSlide(1);
 
-let sx = 0;
-window.addEventListener('touchstart', e => { sx = e.touches[0].clientX; });
-window.addEventListener('touchend', e => {
-  if (!lockEnabled) return;
-  if (sx - e.changedTouches[0].clientX > 50) changeSlide(1);
-  if (e.changedTouches[0].clientX - sx > 50) changeSlide(-1);
+let sx=0;
+window.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;});
+window.addEventListener('touchend',e=>{
+  if(!lockEnabled) return;
+  if(sx-e.changedTouches[0].clientX>50) changeSlide(1);
+  if(e.changedTouches[0].clientX-sx>50) changeSlide(-1);
 });
 
-// Buscador
-searchBtn.onclick = e => {
-  if (!lockEnabled) return;
+searchBtn.onclick=e=>{
+  if(!lockEnabled) return;
   e.stopPropagation();
   topBar.classList.add('active');
   searchIn.classList.add('show');
   searchIn.focus();
 };
 
-searchIn.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    const n = parseInt(this.value);
-    if (n >= 1 && n <= slides.length) {
-      if (!lockEnabled) return;
+searchIn.addEventListener('keypress',function(e){
+  if(e.key==='Enter'){
+    const n=parseInt(this.value);
+    if(n>=1&&n<=slides.length){
+      if(!lockEnabled) return;
       slides[current].classList.remove('active');
-      current = n - 1;
+      current=n-1;
       slides[current].classList.add('active');
 
-      document.documentElement.style.background = bgColors[current];
-      const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
-      theme.setAttribute('content', solidColor);
+      document.documentElement.style.background=bgColors[current];
+      const solidColor=bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
+      const metaClone=theme.cloneNode(true);
+      metaClone.setAttribute('content',solidColor);
+      theme.parentNode.replaceChild(metaClone,theme);
+      theme=metaClone;
 
-      counter.textContent = (current + 1) + ' / ' + slides.length;
+      counter.textContent=(current+1)+' / '+slides.length;
       resetSearch();
     }
   }
 });
 
-searchIn.onchange = () => {
-  const n = parseInt(searchIn.value);
-  if (n >= 1 && n <= slides.length) changeSlide((n - 1) - current);
-  resetSearch();
-};
+searchIn.onchange=()=>{const n=parseInt(searchIn.value); if(n>=1&&n<=slides.length) changeSlide((n-1)-current); resetSearch();}
+function resetSearch(){searchIn.classList.remove('show'); searchIn.value=''; setTimeout(()=>topBar.classList.remove('active'),300);}
+window.addEventListener('click',e=>{if(e.target!==searchBtn&&e.target!==searchIn&&searchIn.classList.contains('show')) resetSearch();});
 
-function resetSearch() {
-  searchIn.classList.remove('show');
-  searchIn.value = '';
-  setTimeout(() => topBar.classList.remove('active'), 300);
-}
-
-window.addEventListener('click', (e) => {
-  if (e.target !== searchBtn && e.target !== searchIn && searchIn.classList.contains('show')) resetSearch();
-});
-
-// badge
-function showBadge() {
-  const b = document.getElementById('newBadge');
-  const slidesSeen = parseInt(localStorage.getItem('slidesSeen') || '0');
-
-  if (slides.length > slidesSeen) {
-    b.style.display = 'inline-block';
-    setTimeout(() => {
-      b.style.animation = "badgeShake 0.5s";
-      setTimeout(() => {
-        b.style.animation = "";
-        const hideOnClick = function() {
-          b.style.display = 'none';
-          localStorage.setItem('slidesSeen', slides.length);
-          document.removeEventListener('click', hideOnClick);
+function showBadge(){
+  const b=document.getElementById('newBadge');
+  const slidesSeen=parseInt(localStorage.getItem('slidesSeen')||'0');
+  if(slides.length>slidesSeen){
+    b.style.display='inline-block';
+    setTimeout(()=>{
+      b.style.animation="badgeShake 0.5s";
+      setTimeout(()=>{
+        b.style.animation="";
+        const hideOnClick=function(){
+          b.style.display='none';
+          localStorage.setItem('slidesSeen',slides.length);
+          document.removeEventListener('click',hideOnClick);
         };
-        document.addEventListener('click', hideOnClick, { once: true });
-      }, 500);
-    }, 3000);
+        document.addEventListener('click',hideOnClick,{once:true});
+      },500);
+    },3000);
   }
 }
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
 </html>
