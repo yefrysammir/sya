@@ -212,14 +212,17 @@ document.getElementById('pwInput').addEventListener('keypress', async function(e
   }
 });
 
-// slide nav
+// slide nav - MODIFICADA PARA CAMBIAR LA BARRA DE ESTADO
 function changeSlide(d) {
   if (!lockEnabled) return;
   slides[current].classList.remove('active');
   current = (current + d + slides.length) % slides.length;
   slides[current].classList.add('active');
+  
+  // Cambiar el fondo de la página Y la barra de estado del teléfono
   document.documentElement.style.background = bgColors[current];
   theme.setAttribute('content', bgColors[current]);
+  
   counter.textContent = (current + 1) + ' / ' + slides.length;
 }
 
@@ -245,6 +248,27 @@ searchBtn.onclick = e => {
   searchIn.classList.add('show');
   searchIn.focus();
 };
+
+searchIn.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    const n = parseInt(this.value);
+    if (n >= 1 && n <= slides.length) {
+      // Ir directamente al slide seleccionado
+      if (!lockEnabled) return;
+      slides[current].classList.remove('active');
+      current = n - 1;
+      slides[current].classList.add('active');
+      
+      // Cambiar el fondo de la página Y la barra de estado del teléfono
+      document.documentElement.style.background = bgColors[current];
+      theme.setAttribute('content', bgColors[current]);
+      
+      counter.textContent = (current + 1) + ' / ' + slides.length;
+      
+      resetSearch();
+    }
+  }
+});
 
 searchIn.onchange = () => {
   const n = parseInt(searchIn.value);
