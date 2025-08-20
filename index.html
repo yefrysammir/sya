@@ -225,7 +225,6 @@ input, button, textarea, select {
 <div id="leftArrow" class="nav-btn">chevron_left</div>
 <div id="rightArrow" class="nav-btn">chevron_right</div>
 
-
 <script>
 let lockEnabled=false;
 const theme=document.getElementById('themeColor');
@@ -246,8 +245,7 @@ const slides = document.querySelectorAll('.slide'),
       searchIn = document.getElementById('searchInput'),
       topBar = document.getElementById('topBar');
 
-const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
-                "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const bgColors = [];
 let hue = Math.floor(Math.random() * 360),
     step = 360 / slides.length;
@@ -265,44 +263,14 @@ const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0]; // color sóli
 theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
-// contenido slides con soporte múltiple de imagen
-const exts = ['jpg','JPG','jpeg','JPEG','png','PNG'];
-
+// contenido slides
 slides.forEach((s, i) => {
+  s.style.background = bgColors[i];
   const d = new Date(s.dataset.date);
-
   const div = document.createElement('div');
   div.className = 'content';
-
-  let imgPath = 'momentos/foto0.JPG';
-
-  // Probar todas las extensiones
-  for (let ext of exts) {
-    const testPath = `momentos/foto${i+1}.${ext}`;
-    const testImg = new Image();
-    testImg.src = testPath;
-    testImg.onerror = null;
-    testImg.onload = () => {
-      const imgElem = div.querySelector('img');
-      if (imgElem && imgElem.src.includes('foto0.jpg')) {
-        imgElem.src = testPath;
-      }
-    };
-  }
-
-  div.innerHTML = `
-    <div class="topHalf">
-      <img src="${imgPath}" class="polaroid">
-    </div>
-    <div class="bottomHalf">
-      <h3>${s.dataset.title}</h3>
-      <div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
-      <p>${s.dataset.desc}</p>
-    </div>
-  `;
-
+  div.innerHTML = `<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
   s.appendChild(div);
-  s.style.background = bgColors[i];
 });
 
 let current = 0;
@@ -343,7 +311,10 @@ function changeSlide(d) {
   current = (current + d + slides.length) % slides.length;
   slides[current].classList.add('active');
 
+  // Cambiar el fondo de la página
   document.documentElement.style.background = bgColors[current];
+
+  // Cambiar theme-color usando color sólido del gradiente
   const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
   theme.setAttribute('content', solidColor);
 
