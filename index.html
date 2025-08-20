@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"/>
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SYA</title>
 
-<link rel="manifest" href="manifest.json"/>
-<meta id="themeColor" name="theme-color" content="#ffa0e5"/>
+<link rel="manifest" href="manifest.json" />
+<meta id="themeColor" name="theme-color" content="#00000000" />
+
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
@@ -14,13 +15,20 @@
 :root{--primary:#ffa0e5;--text:#ffffff;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
 html,body{
-  width:100%;height:100dvh;overflow:hidden;background:#f5f5f7;
-  font-family:'Cormorant Garamond',serif;color:var(--text);
+  width:100%;height:100dvh;overflow:hidden;
+  background:#f5f5f7;color:var(--text);
+  font-family:'Cormorant Garamond',serif;
   overscroll-behavior:none;touch-action:none;transition:background .5s;
 }
 
 /* -------- Slides -------- */
-#slider{position:absolute;inset:0;height:100dvh;width:100%}
+#slider{
+  position:absolute;inset:0;height:100dvh;width:100%;
+  opacity:0;filter:blur(10px);
+  transition:opacity .8s, filter 1s;
+}
+#slider.ready{opacity:1;filter:blur(0);}
+
 .slide{position:absolute;inset:0;opacity:0;transform:scale(1.04);transition:.8s}
 .slide.active{opacity:1;transform:scale(1);z-index:1}
 .overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.35));backdrop-filter:blur(14px);padding-bottom:3rem;text-align:center}
@@ -29,36 +37,64 @@ html,body{
 h3{font-family:'Dancing Script',cursive;font-size:2rem;margin-bottom:.4rem}
 .date{opacity:.8;margin-bottom:.7rem}
 
-/* -------- TopBar -------- */
-.topBar{position:fixed;top:0;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.25);padding:.45rem .8rem;border-radius:12px;z-index:30;display:flex;align-items:center;gap:.4rem}
+/* ---------- Top Bar ---------- */
+.topBar{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.25);padding:.45rem .8rem;border-radius:12px;
+  z-index:30;display:flex;align-items:center;gap:.4rem
+}
 #searchBtn{cursor:pointer;}#searchBtn:active{transform:scale(.9)}
 #searchInput{background:rgba(255,255,255,.25);border:none;border-radius:6px;color:#fff;font-size:1rem;width:60px;outline:none;padding:.2rem .4rem;display:none;opacity:0;transform:translateX(-10px);transition:.25s}
 #searchInput.visible{display:block;opacity:1;transform:translateX(0)}
 .badge{background:var(--primary);padding:.15rem .6rem;border-radius:12px;font-size:.75rem;display:none;z-index:40}
+@keyframes badgeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-4px)}}
 
-/* -------- Lock (ahora overlay dentro del 1er slide) -------- */
-#lockOverlay{position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(12px);z-index:50;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity .6s}
+/* ---------- Lock Overlay (covers entire phone incl. status bar) ---------- */
+#lockOverlay{
+  position:fixed;inset:0;z-index:99;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(14px);
+  transition:opacity .6s;
+}
 #lockOverlay.fadeOut{opacity:0}
-#lockOverlay .heart{font-size:3.2rem;opacity:0;color:#fff;margin-bottom:.6rem;animation:fadeZoom .8s forwards, heartbeat 2s infinite}
-#lockOverlay h2{font-family:'Dancing Script',cursive;font-size:2.2rem;opacity:0;animation:fadeZoom .8s forwards}
+#lockOverlay .heart{
+  font-size:3.2rem;color:#fff;margin-bottom:.6rem;
+  opacity:0;
+  animation:fadeZoom .8s forwards, heartbeat 1.8s infinite;
+}
+#lockOverlay h2{
+  font-family:'Dancing Script',cursive;
+  font-size:2.2rem;opacity:0;
+  animation:fadeZoom .8s forwards;
+}
 @keyframes fadeZoom{to{opacity:1;transform:scale(1)}}
 @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
 #lockOverlay input,#lockOverlay button{border:none;outline:none;font-size:1rem}
 #lockOverlay input{margin-top:.5rem;padding:.45rem .7rem;border-radius:6px;text-align:center}
 #lockOverlay button{margin-top:.6rem;padding:.4rem .9rem;background:var(--primary);color:#fff;border-radius:6px;cursor:pointer}
-#lockError{color:#ff8585;margin-top:.4rem;display:none}
+#errorText{color:#ff8585;margin-top:.4rem;display:none}
 
-/* Flechas / zonas */
+/* ---------- Navigation zones ---------- */
 .edge{position:absolute;top:0;height:100%;width:50%;z-index:10}
 #leftEdge{left:0;} #rightEdge{right:0;}
 .nav-btn{position:absolute;top:50%;transform:translateY(-50%);font-family:'Material Symbols Outlined';font-size:3rem;color:#fff;opacity:.15;pointer-events:none}
-#leftArrow{left:1rem;}#rightArrow{right:1rem;}
-
-@keyframes badgeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-4px)}}
+#leftArrow{left:1rem;} #rightArrow{right:1rem;}
 </style>
 </head>
 
 <body oncontextmenu="return false;">
+
+<!-- 🔐 LOCK -->
+<div id="lockOverlay">
+  <span class="material-symbols-outlined heart">diagnosis</span>
+  <h2>Álbum de SYA 💜</h2>
+  <input id="pwInput" type="password" placeholder="Contraseña">
+  <button onclick="unlock()">Entrar</button>
+  <div id="errorText">Contraseña incorrecta</div>
+</div>
+
+<!-- 📸 SLIDES -->
 <div id="slider">
   <div class="slide" data-title="Momento 1" data-desc="Descripción" data-date="2025-08-12"></div>
   <div class="slide" data-title="Momento 2" data-desc="Descripción" data-date="2025-08-13"></div>
@@ -66,15 +102,6 @@ h3{font-family:'Dancing Script',cursive;font-size:2rem;margin-bottom:.4rem}
   <div class="slide" data-title="Momento 4" data-desc="Descripción" data-date="2025-08-15"></div>
   <div class="slide" data-title="Momento 5" data-desc="Descripción" data-date="2025-08-16"></div>
   <div class="slide" data-title="Momento 6" data-desc="Descripción" data-date="2025-08-17"></div>
-
-  <!-- 🔐 overlay dentro del slider -->
-  <div id="lockOverlay">
-    <span class="material-symbols-outlined heart">diagnosis</span>
-    <h2>Álbum de SyA</h2>
-    <input id="pwInput" type="password" placeholder="Contraseña">
-    <button onclick="unlock()">Entrar</button>
-    <div id="lockError">Contraseña incorrecta</div>
-  </div>
 </div>
 
 <div class="topBar">
@@ -90,8 +117,9 @@ h3{font-family:'Dancing Script',cursive;font-size:2rem;margin-bottom:.4rem}
 <div id="rightArrow" class="nav-btn">chevron_right</div>
 
 <script>
-let lockEnabled=false; /* cambia a true al desbloquear */
+let lockEnabled=false;
 
+/* -------------- Mostrar/Nuevas Badge -------------- */
 function showBadge(){
   const badge=document.getElementById('newBadge');
   badge.style.display='inline-block';
@@ -101,33 +129,39 @@ function showBadge(){
       setTimeout(()=>badge.style.animation="",500);
     }
   },3000);
-  setTimeout(()=>window.addEventListener('click',function rm(){badge.style.display='none';localStorage.setItem('slidesSeen',slides.length.toString());window.removeEventListener('click',rm)}),50);
+
+  const clear=()=>{badge.style.display='none';localStorage.setItem('slidesSeen',slides.length);window.removeEventListener('click',clear)};
+  setTimeout(()=>window.addEventListener('click',clear),50);
 }
 
-/* ----------- UNLOCK ----------- */
+/* -------------- UNLOCK -------------- */
 function unlock(){
   const encoded="U1lBMjUxOQ==";
-  if(document.getElementById('pwInput').value===atob(encoded)){
-    const overlay=document.getElementById('lockOverlay');
-    overlay.classList.add('fadeOut');
-    overlay.querySelector('.heart').style.animation="none";
-    overlay.querySelector('h2').style.opacity='0';
-    setTimeout(()=>{
-      overlay.remove();
-      lockEnabled=true;
-      // badge
-      const seen=parseInt(localStorage.getItem('slidesSeen')||'0');
-      if(slides.length>seen){showBadge();}
-    },400);
-  }else{
-    document.getElementById('lockError').style.display="block";
-  }
-}
-document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==="Enter")unlock();});
+  const val=document.getElementById('pwInput').value;
+  if(val!==atob(encoded)){ document.getElementById('errorText').style.display='block'; return; }
 
-/* -------- Slides -------- */
+  const overlay=document.getElementById('lockOverlay');
+  overlay.querySelector('.heart').style.animation="none";
+  overlay.querySelector('h2').style.opacity='0';
+  overlay.style.opacity='0';
+
+  setTimeout(()=>{
+    overlay.remove();
+    // restauramos color pastel real en la barra
+    themeColor.setAttribute('content',bgColors[current]);
+    document.getElementById('slider').classList.add('ready');
+    lockEnabled=true;
+
+    const seen=parseInt(localStorage.getItem('slidesSeen')||'0');
+    if(slides.length>seen) showBadge();
+  },500);
+}
+document.getElementById('pwInput').addEventListener('keydown',(e)=>{if(e.key==="Enter")unlock()});
+
+/* -------------- Slides Build -------------- */
 const slides=document.querySelectorAll('.slide'),counter=document.getElementById('counter'),searchBtn=document.getElementById('searchBtn'),searchIn=document.getElementById('searchInput');
 const months=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
 const bgColors=[];let hue=Math.floor(Math.random()*360),step=360/slides.length;
 for(let i=0;i<slides.length;i++){bgColors.push(`hsl(${hue},65%,86%)`);hue=(hue+step)%360;}
 
@@ -141,52 +175,25 @@ slides.forEach((s,i)=>{
   ov.innerHTML+=`<h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p>`;
   s.appendChild(ov);
 });
+
 document.documentElement.style.background=bgColors[0];
-themeColor.setAttribute('content',bgColors[0]);
+let current=0;
+slides[current].classList.add('active');
+counter.textContent=`1 / ${slides.length}`;
 
-let current=0;slides[current].classList.add('active');counter.textContent=`1 / ${slides.length}`;
+/* Navigation */
+function changeSlide(d){if(!lockEnabled)return;slides[current].classList.remove('active');current=(current+d+slides.length)%slides.length;slides[current].classList.add('active');document.documentElement.style.background=bgColors[current];themeColor.setAttribute('content',bgColors[current]);counter.textContent=(current+1)+' / '+slides.length;}
+leftEdge.onclick=()=>changeSlide(-1);
+rightEdge.onclick=()=>changeSlide(1);
 
-/* slide nav */
-function changeSlide(d){
-  if(!lockEnabled) return;
-  slides[current].classList.remove('active');
-  current=(current+d+slides.length)%slides.length;
-  slides[current].classList.add('active');
-  document.documentElement.style.background=bgColors[current];
-  themeColor.setAttribute('content',bgColors[current]);
-  counter.textContent=(current+1)+' / '+slides.length;
-}
-leftEdge.onclick=()=>{changeSlide(-1);}
-rightEdge.onclick=()=>{changeSlide(1);}
-let sx=0;
-window.addEventListener('touchstart',e=>{sx=e.touches[0].clientX});
-window.addEventListener('touchend',e=>{
-  if(!lockEnabled) return;
-  let ex=e.changedTouches[0].clientX;
-  if(sx-ex>50)changeSlide(1);
-  if(ex-sx>50)changeSlide(-1);
-});
+/* gestos */
+let sx=0;window.addEventListener('touchstart',e=>{sx=e.touches[0].clientX});
+window.addEventListener('touchend',e=>{if(!lockEnabled)return;let ex=e.changedTouches[0].clientX;if(sx-ex>50)changeSlide(1);if(ex-sx>50)changeSlide(-1)});
 
-/* search */
-searchBtn.onclick=e=>{
-  if(!lockEnabled) return;
-  e.stopPropagation();
-  searchIn.style.display='block';
-  requestAnimationFrame(()=>searchIn.classList.add('visible'));
-  searchIn.focus();
-};
-searchIn.onchange=()=>{
-  let n=parseInt(searchIn.value);
-  if(n>=1&&n<=slides.length)changeSlide((n-1)-current);
-  searchIn.classList.remove('visible');
-  setTimeout(()=>{searchIn.style.display='none';searchIn.value='';},200);
-};
-window.addEventListener('click',e=>{
-  if(e.target!==searchBtn && e.target!==searchIn && searchIn.style.display==='block'){searchIn.classList.remove('visible');setTimeout(()=>{searchIn.style.display='none';searchIn.value='';},200);}
-});
-
-/* badge */
-const slidesSeen=parseInt(localStorage.getItem('slidesSeen')||'0');
+/* Buscador */
+searchBtn.onclick=e=>{if(!lockEnabled)return;e.stopPropagation();searchIn.style.display='block';requestAnimationFrame(()=>searchIn.classList.add('visible'));searchIn.focus();};
+searchIn.onchange=()=>{let n=parseInt(searchIn.value); if(n>=1&&n<=slides.length)changeSlide((n-1)-current);searchIn.classList.remove('visible');setTimeout(()=>{searchIn.style.display='none';searchIn.value='';},200)};
+window.addEventListener('click',e=>{if(e.target!==searchBtn && e.target!==searchIn && searchIn.style.display==='block'){ searchIn.classList.remove('visible');setTimeout(()=>{searchIn.style.display='none';searchIn.value='';},200); }});
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js');
 </script>
