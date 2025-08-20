@@ -135,84 +135,149 @@ html,body{height:100dvh;width:100%;overflow:hidden;font-family:'Cormorant Garamo
 <div id="rightArrow" class="nav-btn">chevron_right</div>
 
 <script>
-let lockEnabled=false;
-const theme=document.getElementById('themeColor');
+let lockEnabled = false;
+const theme = document.getElementById('themeColor');
 
-/* slides y fondos (igual que antes) */
-const slides=document.querySelectorAll('.slide'),counter=document.getElementById('counter'),searchBtn=document.getElementById('searchBtn'),searchIn=document.getElementById('searchInput'),topBar=document.getElementById('topBar');
-const months=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-const bgColors=[];let hue=Math.floor(Math.random()*360),step=360/slides.length;
-for(let i=0;i<slides.length;i++){
-  const base=`hsl(${hue},65%,86%)`,dark=`hsl(${hue},65%,78%)`;
-  bgColors.push(`linear-gradient(${base},${dark})`);
-  hue=(hue+step)%360;
+// Función para hashear con SHA-256
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
-document.documentElement.style.background=bgColors[0];
-theme.setAttribute('content',bgColors[0]);
-document.getElementById('lockOverlay').style.background=bgColors[0];
 
-// Añade este event listener para el input de contraseña
-document.getElementById('pwInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    unlock();
-  }
-});
+// slides y fondos
+const slides = document.querySelectorAll('.slide'),
+      counter = document.getElementById('counter'),
+      searchBtn = document.getElementById('searchBtn'),
+      searchIn = document.getElementById('searchInput'),
+      topBar = document.getElementById('topBar');
+      
+const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const bgColors = [];
+let hue = Math.floor(Math.random() * 360),
+    step = 360 / slides.length;
 
-// Y este para el input de búsqueda (si también quieres que funcione allí)
-document.getElementById('searchInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    const n = parseInt(this.value);
-    if (n >= 1 && n <= slides.length) {
-      changeSlide((n-1)-current);
-      resetSearch();
-    }
-  }
-});
+for (let i = 0; i < slides.length; i++) {
+  const base = `hsl(${hue},65%,86%)`,
+        dark = `hsl(${hue},65%,78%)`;
+  bgColors.push(`linear-gradient(${base},${dark})`);
+  hue = (hue + step) % 360;
+}
 
-/* contenido slides */
-slides.forEach((s,i)=>{
-  s.style.background=bgColors[i];
-  const d=new Date(s.dataset.date);
-  const div=document.createElement('div');
-  div.className='content';
-  div.innerHTML=`<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
+document.documentElement.style.background = bgColors[0];
+theme.setAttribute('content', bgColors[0]);
+document.getElementById('lockOverlay').style.background = bgColors[0];
+
+// contenido slides
+slides.forEach((s, i) => {
+  s.style.background = bgColors[i];
+  const d = new Date(s.dataset.date);
+  const div = document.createElement('div');
+  div.className = 'content';
+  div.innerHTML = `<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
   s.appendChild(div);
 });
-let current=0;slides[current].classList.add('active');
-counter.textContent=`1 / ${slides.length}`;
 
-/* Unlock */
-function unlock(){
-  if(document.getElementById('pwInput').value!=="SYA2519"){document.getElementById('errorText').style.display='block';return;}
-  const o=document.getElementById('lockOverlay');o.querySelector('.heart').style.animation="none";o.classList.add('fadeOut');
-  setTimeout(()=>{o.remove();lockEnabled=true;if(slides.length>parseInt(localStorage.getItem('slidesSeen')||'0'))showBadge();},400);
+let current = 0;
+slides[current].classList.add('active');
+counter.textContent = `1 / ${slides.length}`;
+
+// Unlock con contraseña cifrada
+async function unlock() {
+  const input = document.getElementById('pwInput').value;
+  const hashedInput = await hashPassword(input);
+  
+  // Reemplaza este hash con el generado para tu contraseña
+  if (hashedInput !== "0c65c03acbe8814cd741385a8745fb0b26306d8a8a709f1e2752bf0224e5dc9e") {
+    document.getElementById('errorText').style.display = 'block';
+    return;
+  }
+  
+  const o = document.getElementById('lockOverlay');
+  o.querySelector('.heart').style.animation = "none";
+  o.classList.add('fadeOut');
+  setTimeout(() => {
+    o.remove();
+    lockEnabled = true;
+    if (slides.length > parseInt(localStorage.getItem('slidesSeen') || '0')) showBadge();
+  }, 400);
 }
-/* slide nav */
-function changeSlide(d){if(!lockEnabled)return;slides[current].classList.remove('active');current=(current+d+slides.length)%slides.length;slides[current].classList.add('active');document.documentElement.style.background=bgColors[current];theme.setAttribute('content',bgColors[current]);counter.textContent=(current+1)+' / '+slides.length;}
-leftEdge.onclick=()=>changeSlide(-1); rightEdge.onclick=()=>changeSlide(1);
-let sx=0;window.addEventListener('touchstart',e=>{sx=e.touches[0].clientX});window.addEventListener('touchend',e=>{if(!lockEnabled)return;if(sx-e.changedTouches[0].clientX>50)changeSlide(1);if(e.changedTouches[0].clientX-sx>50)changeSlide(-1)});
 
-/* --- Buscador con animación expandible --- */
-searchBtn.onclick=e=>{
-  if(!lockEnabled) return;
+// Activar con tecla Enter
+document.getElementById('pwInput').addEventListener('keypress', async function(e) {
+  if (e.key === 'Enter') {
+    await unlock();
+  }
+});
+
+// slide nav
+function changeSlide(d) {
+  if (!lockEnabled) return;
+  slides[current].classList.remove('active');
+  current = (current + d + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  document.documentElement.style.background = bgColors[current];
+  theme.setAttribute('content', bgColors[current]);
+  counter.textContent = (current + 1) + ' / ' + slides.length;
+}
+
+leftEdge.onclick = () => changeSlide(-1);
+rightEdge.onclick = () => changeSlide(1);
+
+let sx = 0;
+window.addEventListener('touchstart', e => {
+  sx = e.touches[0].clientX;
+});
+
+window.addEventListener('touchend', e => {
+  if (!lockEnabled) return;
+  if (sx - e.changedTouches[0].clientX > 50) changeSlide(1);
+  if (e.changedTouches[0].clientX - sx > 50) changeSlide(-1);
+});
+
+// Buscador
+searchBtn.onclick = e => {
+  if (!lockEnabled) return;
   e.stopPropagation();
   topBar.classList.add('active');
   searchIn.classList.add('show');
   searchIn.focus();
 };
-searchIn.onchange=()=>{const n=parseInt(searchIn.value);if(n>=1&&n<=slides.length)changeSlide((n-1)-current);resetSearch();}
-function resetSearch(){searchIn.classList.remove('show');searchIn.value='';setTimeout(()=>topBar.classList.remove('active'),300);}
-window.addEventListener('click',(e)=>{if(e.target!==searchBtn && e.target!==searchIn && searchIn.classList.contains('show'))resetSearch();});
 
-/* badge */
-function showBadge(){
-  const b=document.getElementById('newBadge');
-  b.style.display='inline-block';
-  setTimeout(()=>{b.style.animation="badgeShake .5s";setTimeout(()=>b.style.animation="",500)},3000);
-  setTimeout(()=>window.addEventListener('click',function rm(){b.style.display='none';localStorage.setItem('slidesSeen',slides.length);window.removeEventListener('click',rm)}),50);
+searchIn.onchange = () => {
+  const n = parseInt(searchIn.value);
+  if (n >= 1 && n <= slides.length) changeSlide((n - 1) - current);
+  resetSearch();
+};
+
+function resetSearch() {
+  searchIn.classList.remove('show');
+  searchIn.value = '';
+  setTimeout(() => topBar.classList.remove('active'), 300);
 }
 
-if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js');
+window.addEventListener('click', (e) => {
+  if (e.target !== searchBtn && e.target !== searchIn && searchIn.classList.contains('show')) resetSearch();
+});
+
+// badge
+function showBadge() {
+  const b = document.getElementById('newBadge');
+  b.style.display = 'inline-block';
+  setTimeout(() => {
+    b.style.animation = "badgeShake .5s";
+    setTimeout(() => b.style.animation = "", 500);
+  }, 3000);
+  setTimeout(() => window.addEventListener('click', function rm() {
+    b.style.display = 'none';
+    localStorage.setItem('slidesSeen', slides.length);
+    window.removeEventListener('click', rm);
+  }), 50);
+}
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
 </html>
