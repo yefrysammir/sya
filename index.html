@@ -167,7 +167,7 @@ const slides = document.querySelectorAll('.slide'),
       searchBtn = document.getElementById('searchBtn'),
       searchIn = document.getElementById('searchInput'),
       topBar = document.getElementById('topBar');
-      
+
 const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const bgColors = [];
 let hue = Math.floor(Math.random() * 360),
@@ -180,8 +180,10 @@ for (let i = 0; i < slides.length; i++) {
   hue = (hue + step) % 360;
 }
 
+// Fondo inicial y theme-color
 document.documentElement.style.background = bgColors[0];
-theme.setAttribute('content', bgColors[0]);
+const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0]; // color sólido del gradiente
+theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
 // contenido slides
@@ -202,20 +204,19 @@ counter.textContent = `1 / ${slides.length}`;
 async function unlock() {
   const input = document.getElementById('pwInput').value;
   const hashedInput = await hashPassword(input);
-  
-  // Hash
+
   if (hashedInput !== "0c65c03acbe8814cd741385a8745fb0b26306d8a8a709f1e2752bf0224e5dc9e") {
     document.getElementById('errorText').style.display = 'block';
     return;
   }
-  
+
   const o = document.getElementById('lockOverlay');
   o.querySelector('.heart').style.animation = "none";
   o.classList.add('fadeOut');
   setTimeout(() => {
     o.remove();
     lockEnabled = true;
-    showBadge(); // ← Esto se ejecuta después de desbloquear
+    showBadge();
   }, 400);
 }
 
@@ -232,11 +233,14 @@ function changeSlide(d) {
   slides[current].classList.remove('active');
   current = (current + d + slides.length) % slides.length;
   slides[current].classList.add('active');
-  
-  // Cambiar el fondo de la página Y la barra de estado del teléfono
+
+  // Cambiar el fondo de la página
   document.documentElement.style.background = bgColors[current];
-  theme.setAttribute('content', bgColors[current]);
-  
+
+  // Cambiar theme-color usando color sólido del gradiente
+  const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
+  theme.setAttribute('content', solidColor);
+
   counter.textContent = (current + 1) + ' / ' + slides.length;
 }
 
@@ -244,10 +248,7 @@ leftEdge.onclick = () => changeSlide(-1);
 rightEdge.onclick = () => changeSlide(1);
 
 let sx = 0;
-window.addEventListener('touchstart', e => {
-  sx = e.touches[0].clientX;
-});
-
+window.addEventListener('touchstart', e => { sx = e.touches[0].clientX; });
 window.addEventListener('touchend', e => {
   if (!lockEnabled) return;
   if (sx - e.changedTouches[0].clientX > 50) changeSlide(1);
@@ -267,18 +268,16 @@ searchIn.addEventListener('keypress', function(e) {
   if (e.key === 'Enter') {
     const n = parseInt(this.value);
     if (n >= 1 && n <= slides.length) {
-      // Ir directamente al slide seleccionado
       if (!lockEnabled) return;
       slides[current].classList.remove('active');
       current = n - 1;
       slides[current].classList.add('active');
-      
-      // Cambiar el fondo de la página Y la barra de estado del teléfono
+
       document.documentElement.style.background = bgColors[current];
-      theme.setAttribute('content', bgColors[current]);
-      
+      const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
+      theme.setAttribute('content', solidColor);
+
       counter.textContent = (current + 1) + ' / ' + slides.length;
-      
       resetSearch();
     }
   }
@@ -300,28 +299,22 @@ window.addEventListener('click', (e) => {
   if (e.target !== searchBtn && e.target !== searchIn && searchIn.classList.contains('show')) resetSearch();
 });
 
-// badge - CÓDIGO CORREGIDO
+// badge
 function showBadge() {
   const b = document.getElementById('newBadge');
   const slidesSeen = parseInt(localStorage.getItem('slidesSeen') || '0');
-  
-  // Mostrar badge solo si hay slides nuevos
+
   if (slides.length > slidesSeen) {
     b.style.display = 'inline-block';
-    
-    // Animación de shake después de 3 segundos
     setTimeout(() => {
       b.style.animation = "badgeShake 0.5s";
       setTimeout(() => {
         b.style.animation = "";
-        
-        // Ocultar al hacer clic en cualquier lugar (solo una vez)
         const hideOnClick = function() {
           b.style.display = 'none';
           localStorage.setItem('slidesSeen', slides.length);
           document.removeEventListener('click', hideOnClick);
         };
-        
         document.addEventListener('click', hideOnClick, { once: true });
       }, 500);
     }, 3000);
