@@ -15,23 +15,30 @@
 :root{--primary:#ffa0e5;--text:#ffffff;}
 
 *{
-  margin:0;padding:0;box-sizing:border-box;
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
   -webkit-user-select:none;
   user-select:none;
 }
 
-/* Permitir interacción en inputs y textarea */
-input, textarea {
+/* Permitir interacción en inputs y botones */
+#lockOverlay input,
+#lockOverlay button {
   -webkit-user-select:text !important;
   user-select:text !important;
   touch-action:auto !important;
+  pointer-events:auto !important;
 }
 
-html,body{
-  height:100dvh;width:100%;overflow:hidden;
-  font-family:'Cormorant Garamond',serif;color:var(--text);
-  transition:background .4s;
-  overscroll-behavior:none;
+html, body {
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--text);
+  transition: background .4s;
+  /* quitar touch-action:none y overscroll-behavior:none */
 }
 
 /*------------- LOCK -------------*/
