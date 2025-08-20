@@ -251,11 +251,23 @@ leftEdge.onclick = () => changeSlide(-1);
 rightEdge.onclick = () => changeSlide(1);
 
 let sx = 0;
-window.addEventListener('touchstart', e => { sx = e.touches[0].clientX; });
+window.addEventListener('touchstart', e => { 
+  sx = e.touches[0].clientX; 
+  // NO poner e.preventDefault() aquí
+});
+
 window.addEventListener('touchend', e => {
   if (!lockEnabled) return;
+  
+  // Si el objetivo es un input, NO hacer preventDefault y permitir el teclado
+  if (e.target.tagName === 'INPUT' || e.target.isContentEditable) {
+    return; // Permite el comportamiento por defecto (teclado)
+  }
+  
   if (sx - e.changedTouches[0].clientX > 50) changeSlide(1);
   if (e.changedTouches[0].clientX - sx > 50) changeSlide(-1);
+  
+  e.preventDefault(); // Solo prevenir default para gestos de swipe
 });
 
 // Buscador
