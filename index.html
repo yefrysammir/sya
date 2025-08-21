@@ -259,40 +259,35 @@ for (let i = 0; i < slides.length; i++) {
   hue = (hue + step) % 360;
 }
 
-// Fondo inicial y theme-color como estaba en tu original
+// Fondo inicial y theme-color
 document.documentElement.style.background = bgColors[0];
 const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
 theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
-// contenido slides con soporte para varias extensiones
+// contenido slides con soporte mínimo para varias extensiones
 slides.forEach((s, i) => {
   s.style.background = bgColors[i];
   const d = new Date(s.dataset.date);
   const div = document.createElement('div');
   div.className = 'content';
 
-  // crear img con fallback inteligente
+  // --- IMAGEN CON SOPORTE VARIAS EXTENSIONES ---
   const img = document.createElement('img');
   img.className = 'polaroid';
+  img.onerror = () => { img.src = 'momentos/foto0.jpg'; }; // fallback
+
   const extensions = ['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG'];
-  let loaded = false;
-
-  function tryNext(idx) {
-    if (idx >= extensions.length) {
-      img.src = 'momentos/foto0.jpg'; // fallback final
-      return;
+  let set = false;
+  extensions.forEach(ext => {
+    if (!set) {
+      const test = `momentos/foto${i+1}${ext}`;
+      fetch(test, { method: 'HEAD' }).then(r => {
+        if (r.ok && !set) { img.src = test; set = true; }
+      }).catch(()=>{});
     }
-    const testSrc = `momentos/foto${i+1}${extensions[idx]}`;
-    const tmp = new Image();
-    tmp.onload = () => { img.src = testSrc; loaded = true; };
-    tmp.onerror = () => { if(!loaded) tryNext(idx+1); };
-    tmp.src = testSrc;
-  }
+  });
 
-  tryNext(0); // iniciar prueba de extensiones
-
-  // Mantener bottomHalf exactamente como en tu original
   div.innerHTML = `<div class="topHalf"></div>
                    <div class="bottomHalf">
                      <h3>${s.dataset.title}</h3>
@@ -303,7 +298,7 @@ slides.forEach((s, i) => {
   s.appendChild(div);
 });
 
-// Contador inicial exactamente como antes
+// Contador inicial
 let current = 0;
 slides[current].classList.add('active');
 counter.textContent = `1 / ${slides.length}`;
@@ -342,7 +337,7 @@ function changeSlide(d) {
   current = (current + d + slides.length) % slides.length;
   slides[current].classList.add('active');
 
-  // Fondo y theme-color como en original
+  // Fondo y theme-color
   document.documentElement.style.background = bgColors[current];
   const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
   theme.setAttribute('content', solidColor);
