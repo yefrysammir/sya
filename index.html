@@ -265,28 +265,29 @@ const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
 theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
-// contenido slides con soporte mínimo para varias extensiones
+// contenido slides con soporte para varias extensiones de imagen
 slides.forEach((s, i) => {
   s.style.background = bgColors[i];
   const d = new Date(s.dataset.date);
   const div = document.createElement('div');
   div.className = 'content';
 
-  // --- IMAGEN CON SOPORTE VARIAS EXTENSIONES ---
+  // --- IMAGEN SOPORTANDO VARIAS EXTENSIONES ---
   const img = document.createElement('img');
   img.className = 'polaroid';
-  img.onerror = () => { img.src = 'momentos/foto0.jpg'; }; // fallback
 
-  const extensions = ['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG'];
-  let set = false;
-  extensions.forEach(ext => {
-    if (!set) {
-      const test = `momentos/foto${i+1}${ext}`;
-      fetch(test, { method: 'HEAD' }).then(r => {
-        if (r.ok && !set) { img.src = test; set = true; }
-      }).catch(()=>{});
-    }
-  });
+  const exts = ['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG'];
+  let loaded = false;
+  for(let ext of exts){
+    const testSrc = `momentos/foto${i+1}${ext}`;
+    const tmp = new Image();
+    tmp.onload = () => { if(!loaded){ img.src = testSrc; loaded=true; } };
+    tmp.onerror = () => {};
+    tmp.src = testSrc;
+  }
+
+  // fallback a foto0
+  img.onerror = () => { img.src = 'momentos/foto0.jpg'; };
 
   div.innerHTML = `<div class="topHalf"></div>
                    <div class="bottomHalf">
