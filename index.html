@@ -120,7 +120,7 @@ input, button, textarea, select {
 .polaroid {
   max-width: 65%;
   border: 12px solid #fff;
-  border-bottom-width: 32px;
+  border-bottom-width: 22px;
   box-shadow: 0 14px 18px -8px rgba(0,0,0,.35);
   pointer-events: none;
   /* Añade estas propiedades para la animación */
@@ -210,7 +210,6 @@ input, button, textarea, select {
 <div class="slide" data-title="Momento 10" data-desc="Descripción" data-date="2025-08-17"></div>
 <div class="slide" data-title="Momento 11" data-desc="Descripción" data-date="2025-08-17"></div>
 <div class="slide" data-title="Momento 12" data-desc="Descripción" data-date="2025-08-17"></div>
-<div class="slide" data-title="Momento 13" data-desc="Descripción" data-date="2025-08-17"></div>
 </div>
 
 <!-- nueva topbar -->
@@ -225,7 +224,6 @@ input, button, textarea, select {
 <div id="rightEdge" class="edge"></div>
 <div id="leftArrow" class="nav-btn">chevron_left</div>
 <div id="rightArrow" class="nav-btn">chevron_right</div>
-
 
 <script>
 let lockEnabled=false;
@@ -261,45 +259,20 @@ for (let i = 0; i < slides.length; i++) {
 
 // Fondo inicial y theme-color
 document.documentElement.style.background = bgColors[0];
-const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
+const solidColor0 = bgColors[0].match(/hsl\(\d+,\d+%,\d+%\)/)[0]; // color sólido del gradiente
 theme.setAttribute('content', solidColor0);
 document.getElementById('lockOverlay').style.background = bgColors[0];
 
-// contenido slides con soporte para varias extensiones de imagen
+// contenido slides
 slides.forEach((s, i) => {
   s.style.background = bgColors[i];
   const d = new Date(s.dataset.date);
   const div = document.createElement('div');
   div.className = 'content';
-
-  // --- IMAGEN SOPORTANDO VARIAS EXTENSIONES ---
-  const img = document.createElement('img');
-  img.className = 'polaroid';
-
-  const exts = ['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG'];
-  let loaded = false;
-  for(let ext of exts){
-    const testSrc = `momentos/foto${i+1}${ext}`;
-    const tmp = new Image();
-    tmp.onload = () => { if(!loaded){ img.src = testSrc; loaded=true; } };
-    tmp.onerror = () => {};
-    tmp.src = testSrc;
-  }
-
-  // fallback a foto0
-  img.onerror = () => { img.src = 'momentos/foto0.jpg'; };
-
-  div.innerHTML = `<div class="topHalf"></div>
-                   <div class="bottomHalf">
-                     <h3>${s.dataset.title}</h3>
-                     <div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
-                     <p>${s.dataset.desc}</p>
-                   </div>`;
-  div.querySelector('.topHalf').appendChild(img);
+  div.innerHTML = `<div class="topHalf"><img src="momentos/foto${i+1}.jpg" onerror="this.src='momentos/foto0.jpg'" class="polaroid"></div><div class="bottomHalf"><h3>${s.dataset.title}</h3><div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div><p>${s.dataset.desc}</p></div>`;
   s.appendChild(div);
 });
 
-// Contador inicial
 let current = 0;
 slides[current].classList.add('active');
 counter.textContent = `1 / ${slides.length}`;
@@ -338,8 +311,10 @@ function changeSlide(d) {
   current = (current + d + slides.length) % slides.length;
   slides[current].classList.add('active');
 
-  // Fondo y theme-color
+  // Cambiar el fondo de la página
   document.documentElement.style.background = bgColors[current];
+
+  // Cambiar theme-color usando color sólido del gradiente
   const solidColor = bgColors[current].match(/hsl\(\d+,\d+%,\d+%\)/)[0];
   theme.setAttribute('content', solidColor);
 
