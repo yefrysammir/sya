@@ -2,161 +2,208 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Lock Numérico</title>
 
+<!-- PWA -->
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+<!-- Fuentes / Iconos -->
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
 <style>
 :root {
   --primary: #ffa0e5;
-  --text: #fff;
+  --text: #ffffff;
+  --glass: rgba(0,0,0,0.4);
 }
 
 /* --- Global --- */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
 html,body{
-  width:100%;height:100dvh;
+  width:100%;height:100dvh;min-height:100vh;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color:var(--text);
   overflow:hidden;
   background:#000;
+  -webkit-text-size-adjust:100%;
 }
 
-/* --- LockScreen --- */
+/* --- Lock Screen --- */
 #lockScreen{
   position:fixed;inset:0;
   display:flex;flex-direction:column;
   justify-content:center;align-items:center;
   background:url("momentos/foto0.jpg") no-repeat center/cover;
+  transition:transform 0.7s ease-in-out;
+  z-index:10;
 }
 #lockScreen::after{
-  content:"";position:absolute;inset:0;
+  content:"";
+  position:absolute;inset:0;
   background:rgba(0,0,0,0.35);
+  pointer-events:none;
 }
-.lockContent{position:relative;display:flex;flex-direction:column;align-items:center;z-index:1;width:100%;}
+.lockContent{
+  position:relative;display:flex;flex-direction:column;align-items:center;z-index:1;width:100%;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+}
 
-/* Corazón */
+/* Corazón animado */
 .heart{font-size:3rem;margin-bottom:1rem;animation:heartbeat 1.8s infinite;}
 @keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
 
-/* Indicador PIN */
+/* PIN dots */
 #pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
-.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid var(--text);transition:.2s;}
+.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid var(--text);background:transparent;transition:.2s;}
 .dot.filled{background:var(--text);}
 
 /* Mensaje */
-#message{font-size:1.1rem;margin-bottom:1rem;min-height:1.5rem;transition:.3s;}
+#message{font-size:1.1rem;margin-bottom:1rem;min-height:1.5rem;opacity:0;transition:opacity .3s ease;}
+#message.show{opacity:1;}
 .shake{animation:shake .4s;}
 @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
 
 /* Keypad */
-#keypad{display:grid;grid-template-columns:repeat(3,70px);gap:1rem;justify-content:center;}
-.key{
-  width:70px;height:70px;border-radius:50%;
-  background:rgba(0,0,0,0.4);color:var(--text);
-  display:flex;align-items:center;justify-content:center;
-  font-size:2rem;cursor:pointer;
-  backdrop-filter:blur(6px);
-  transition:.15s;
-  touch-action:manipulation;
+#keypad{
+  display:grid;
+  grid-template-columns:repeat(3,min(20vw,70px));
+  gap:1rem;justify-content:center;
 }
-.key:active{transform:scale(0.9);}
+.key{
+  width:min(20vw,70px);height:min(20vw,70px);
+  border-radius:50%;
+  background:var(--glass);
+  color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;cursor:pointer;backdrop-filter:blur(6px);
+  transition:.2s;position:relative;overflow:hidden;
+}
+.key.active{transform:scale(0.9);}
+.key::after{
+  content:"";position:absolute;width:120%;height:120%;top:50%;left:50%;
+  background:rgba(255,255,255,0.2);border-radius:50%;
+  transform:translate(-50%,-50%) scale(0);transition:transform .4s,opacity .4s;opacity:0;
+}
+.key.active::after{transform:translate(-50%,-50%) scale(1);opacity:1;}
 .material-symbols-outlined{font-size:2rem;}
 
-/* --- Slides --- */
-#slidesWrapper{display:none;position:fixed;inset:0;overflow:hidden;}
-.slide{
-  width:100%;height:100%;
-  flex-shrink:0;
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;
-  background:#000;color:#fff;
-  padding:2rem;text-align:center;
-  font-family:'Dancing Script',cursive;
-  font-size:1.2rem;
-}
-.slide h2{font-size:2rem;margin-bottom:.5rem;}
-.slide p{font-size:1rem;max-width:90%;}
-.slide small{opacity:.7;margin-top:.5rem;}
-
-/* Barra contador */
+/* --- Topbar Stories --- */
 #topbar{
-  position:fixed;top:0;left:0;width:100%;
-  display:flex;align-items:center;justify-content:center;gap:.5rem;
-  background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
-  padding:.5rem;z-index:10;
+  position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:6;
+  display:flex;justify-content:center;padding:.5rem 1rem;
 }
-#slideCounter{
-  width:60px;padding:.3rem .6rem;
-  border-radius:20px;border:none;
-  text-align:center;font-size:1rem;
-  -webkit-appearance:none;
+.searchWrap{
+  flex:1;max-width:700px;display:flex;align-items:center;gap:.5rem;
+  background:var(--glass);backdrop-filter:blur(6px);border-radius:999px;padding:.35rem .75rem;
 }
-#totalSlides{font-size:1rem;}
-#addBtn{
-  padding:.3rem .7rem;border-radius:20px;
-  border:none;background:var(--primary);color:#000;
-  font-size:.9rem;cursor:pointer;
+.searchWrap .icon{font-size:1.4rem;opacity:.9;}
+#slideSearch{
+  flex:1;border:none;outline:none;background:transparent;color:var(--text);
+  font-size:1rem;padding:.35rem 0;
 }
+#slideSearch::placeholder{color:#ddd;opacity:.7;}
+.counter{font-variant-numeric:tabular-nums;opacity:.9;white-space:nowrap;}
+
+/* --- Stories --- */
+#stories{
+  position:fixed;inset:0;background:#000;
+  overflow-y:auto;
+  scroll-snap-type:y mandatory;
+  transform:translateY(100%);
+  transition:transform 0.7s ease-in-out;
+  z-index:5;
+  scrollbar-width:none;
+}
+#stories::-webkit-scrollbar{display:none;}
+.story{
+  min-height:100dvh;width:100%;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;scroll-snap-align:start;
+  padding:2rem;background-size:cover;background-position:center;position:relative;
+}
+.story::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.4);}
+.storyContent{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1rem;}
+.story h2{font-family:"Dancing Script", cursive;font-size:2rem;margin-bottom:.5rem;}
+.story .date{font-size:1rem;opacity:.85;margin-bottom:1rem;}
+.story p{font-size:1.1rem;line-height:1.4;}
 </style>
 </head>
 <body oncontextmenu="return false;">
 
+<!-- Lock -->
 <div id="lockScreen">
   <div class="lockContent">
     <span class="material-symbols-outlined heart">favorite</span>
-    <div id="message">Ingrese código</div>
+    <div id="message" class="show">Ingrese código</div>
     <div id="pinDots"></div>
     <div id="keypad"></div>
   </div>
 </div>
 
-<div id="slidesWrapper">
-  <div id="topbar">
-    <input type="number" id="slideCounter" inputmode="numeric" pattern="[0-9]*">
-    <span id="totalSlides"></span>
-    <button id="addBtn">+ Nuevo</button>
+<!-- Topbar Stories -->
+<div id="topbar" style="display:none;">
+  <div class="searchWrap">
+    <span class="material-symbols-outlined icon">search</span>
+    <input id="slideSearch" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Ir a slide # (1…N)"/>
+    <div class="counter"><span id="currentIdx">1</span> / <span id="totalIdx">1</span></div>
   </div>
-  <div id="slidesContainer" style="display:flex;flex-direction:column;height:100%;transition:transform .4s ease;"></div>
 </div>
 
+<!-- Stories -->
+<div id="stories" aria-label="Historias de pareja"></div>
+
+<!-- JSON -->
+<script id="recuerdosJSON" type="application/json">
+[
+  {"titulo":"Una nueva historia","fecha":"2025-08-21","descripcion":"Decididos a iniciar una increíble historia.","fondo":"momentos/foto1.jpg"},
+  {"titulo":"Momento especial","fecha":"2025-09-10","descripcion":"Aquel día que reímos mucho.","fondo":"momentos/foto2.jpg"},
+  {"titulo":"Nuestro sueño","fecha":"2026-02-14","descripcion":"Un día de amor y planes.","fondo":"momentos/foto3.jpg"}
+]
+</script>
+
 <script>
-// --- Configuración ---
+// Config
 const PASSWORD_HASH="4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d";
 const PIN_LENGTH=6;
 
-// --- Dots ---
-const dots=document.getElementById("pinDots");
-for(let i=0;i<PIN_LENGTH;i++){dots.innerHTML+=`<div class="dot"></div>`;}
-const dotEls=[...document.querySelectorAll(".dot")];
-const msg=document.getElementById("message");
-
-// --- Keypad ---
+// Elements
 const keypad=document.getElementById("keypad");
+const dots=document.getElementById("pinDots");
+const dotEls=[]; for(let i=0;i<PIN_LENGTH;i++){let d=document.createElement("div");d.className="dot";dots.appendChild(d);dotEls.push(d);}
+const msg=document.getElementById("message");
+const lockScreen=document.getElementById("lockScreen");
+const stories=document.getElementById("stories");
+const topbar=document.getElementById("topbar");
+const slideSearch=document.getElementById("slideSearch");
+const currentIdxEl=document.getElementById("currentIdx");
+const totalIdxEl=document.getElementById("totalIdx");
+
+// Keypad
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function renderKeypad(){
   keypad.innerHTML="";
-  shuffle([...Array(10).keys()]).forEach(n=>{
+  let nums=shuffle([...Array(10).keys()]);
+  nums.forEach(n=>{
     const k=document.createElement("div");
-    k.className="key";k.textContent=n;
-    k.addEventListener("pointerdown",()=>enterDigit(n));
+    k.className="key"; k.textContent=n;
+    k.addEventListener("pointerdown",()=>{k.classList.add("active");enterDigit(n);});
+    k.addEventListener("pointerup",()=>k.classList.remove("active"));
     keypad.appendChild(k);
   });
   const del=document.createElement("div");
   del.className="key material-symbols-outlined";del.textContent="backspace";
-  del.addEventListener("pointerdown",deleteDigit);
+  del.addEventListener("pointerdown",()=>{del.classList.add("active");deleteDigit();});
+  del.addEventListener("pointerup",()=>del.classList.remove("active"));
   keypad.appendChild(del);
 }
 renderKeypad();
 
-// --- Lógica Lock ---
+// PIN
 let input="";
 async function hashPassword(pwd){
   const enc=new TextEncoder().encode(pwd);
@@ -166,105 +213,69 @@ async function hashPassword(pwd){
 function enterDigit(n){
   if(input.length>=PIN_LENGTH)return;
   input+=n;dotEls[input.length-1].classList.add("filled");
-  if(input.length===PIN_LENGTH) checkPassword();
+  if(input.length===PIN_LENGTH)checkPassword();
 }
 function deleteDigit(){
-  if(input.length>0){
-    dotEls[input.length-1].classList.remove("filled");
-    input=input.slice(0,-1);
-  }
+  if(input.length>0){dotEls[input.length-1].classList.remove("filled");input=input.slice(0,-1);}
 }
+function showMessage(t){msg.textContent=t;msg.classList.add("show");}
 async function checkPassword(){
-  const hash=await hashPassword(input);
-  if(hash===PASSWORD_HASH){unlock();}
-  else{
-    msg.textContent="Código incorrecto";msg.classList.add("shake");
-    setTimeout(()=>msg.classList.remove("shake"),400);
-    input="";dotEls.forEach(d=>d.classList.remove("filled"));renderKeypad();
+  const h=await hashPassword(input);
+  if(h===PASSWORD_HASH){
+    lockScreen.style.transform="translateY(-100%)";
+    stories.style.transform="translateY(0)";
+    topbar.style.display="flex";
+  }else{
+    input="";dotEls.forEach(d=>d.classList.remove("filled"));renderKeypad();showMessage("Incorrecto");
   }
 }
-function unlock(){
-  document.getElementById("lockScreen").style.display="none";
-  document.getElementById("slidesWrapper").style.display="block";
-  initSlides();
+
+// Stories
+function formatDate(iso){
+  const d=new Date(iso+"T12:00:00");
+  const m=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return `${d.getDate()} de ${m[d.getMonth()]} del ${d.getFullYear()}`;
 }
-
-// --- Slides JSON ---
-let slidesData=[
-  {title:"Una nueva historia",date:"21 de agosto del 2025",desc:"Decididos a iniciar una increíble historia llena de retos, momentos y sentimientos."},
-  {title:"Momento especial",date:"22 de agosto del 2025",desc:"Un día para recordar juntos y sonreír."},
-  {title:"Nuestro futuro",date:"23 de agosto del 2025",desc:"Soñando con la casita propia, construyendo nuestro hogar."}
-];
-
-let currentIndex=0;
-const slidesContainer=document.getElementById("slidesContainer");
-const totalSlides=document.getElementById("totalSlides");
-
-function initSlides(){
-  renderSlides();
-  updateCounter();
+function crearStory(o){
+  const s=document.createElement("section");
+  s.className="story";s.style.backgroundImage=`url(${o.fondo})`;
+  s.innerHTML=`<div class="storyContent"><h2>${o.titulo}</h2><div class="date">${formatDate(o.fecha)}</div><p>${o.descripcion}</p></div>`;
+  return s;
 }
+let historias=[];
+(function montar(){
+  historias=JSON.parse(document.getElementById("recuerdosJSON").textContent);
+  historias.forEach(x=>stories.appendChild(crearStory(x)));
+  totalIdxEl.textContent=historias.length;
+})();
+let currentIndex=1;
+function irASlide(n){
+  if(!historias.length)return;
+  let max=historias.length;
+  if(n<1) n=max; if(n>max) n=1;
+  stories.children[n-1].scrollIntoView({behavior:"smooth",block:"start"});
+}
+slideSearch.addEventListener("change",()=>{let v=parseInt(slideSearch.value);if(!isNaN(v))irASlide(v);});
 
-function renderSlides(){
-  slidesContainer.innerHTML="";
-  slidesData.forEach(s=>{
-    const el=document.createElement("div");
-    el.className="slide";
-    el.innerHTML=`<h2>${s.title}</h2><small>${s.date}</small><p>${s.desc}</p>`;
-    slidesContainer.appendChild(el);
+// Loop con scroll
+stories.addEventListener("scroll",()=>{
+  let idx=[...stories.children].findIndex(sec=>{
+    let rect=sec.getBoundingClientRect();
+    return rect.top>=0 && rect.top<window.innerHeight*0.6;
   });
-  totalSlides.textContent=`/ ${slidesData.length}`;
-}
+  if(idx>=0){currentIndex=idx+1;currentIdxEl.textContent=currentIndex;}
+});
 
-// --- Navegación touch con loop ---
-let startY=0;
-slidesContainer.addEventListener("touchstart",e=>startY=e.touches[0].clientY);
-slidesContainer.addEventListener("touchend",e=>{
-  let diff=startY-e.changedTouches[0].clientY;
-  if(Math.abs(diff)>40){
-    if(diff>0) nextSlide(); else prevSlide();
+// Swipe loop
+let touchStartY=0;
+stories.addEventListener("touchstart",e=>touchStartY=e.touches[0].clientY,{passive:true});
+stories.addEventListener("touchend",e=>{
+  let dy=e.changedTouches[0].clientY-touchStartY;
+  if(Math.abs(dy)>50){
+    if(dy<0) irASlide(currentIndex+1);
+    else irASlide(currentIndex-1);
   }
 });
-function nextSlide(){
-  currentIndex=(currentIndex+1)%slidesData.length;
-  updateTransform();
-}
-function prevSlide(){
-  currentIndex=(currentIndex-1+slidesData.length)%slidesData.length;
-  updateTransform();
-}
-function updateTransform(){
-  slidesContainer.style.transform=`translateY(${-currentIndex*100}%)`;
-  updateCounter();
-}
-function updateCounter(){
-  document.getElementById("slideCounter").value=currentIndex+1;
-}
-
-// --- Buscar slide por número ---
-document.getElementById("slideCounter").addEventListener("change",e=>{
-  let val=parseInt(e.target.value)-1;
-  if(val>=0 && val<slidesData.length){currentIndex=val;updateTransform();}
-});
-
-// --- Botón agregar nuevo ---
-document.getElementById("addBtn").addEventListener("click",()=>{
-  let title=prompt("Título del momento:");
-  if(!title) return;
-  let date=prompt("Fecha (ej: 24 de agosto del 2025):");
-  if(!date) return;
-  let desc=prompt("Descripción:");
-  if(!desc) return;
-
-  slidesData.push({title,date,desc});
-  renderSlides();
-  totalSlides.textContent=`/ ${slidesData.length}`;
-  currentIndex=slidesData.length-1;
-  updateTransform();
-});
-
-// --- SW ---
-if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
 </html>
