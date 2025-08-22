@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lock Numérico</title>
 
+<!-- status bar iOS/Android -->
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
@@ -24,12 +29,29 @@ html,body{
   background:#000;
 }
 
-/* --- Fondo estilo TikTok (imagen full) --- */
+/* --- Fondo estilo TikTok (imagen full con overlay oscuro) --- */
 #lockScreen{
   position:fixed;inset:0;
   display:flex;flex-direction:column;
   justify-content:center;align-items:center;
-  background:url("momentos/foto1.jpg") no-repeat center/cover;
+  background:url("fondo-lock.jpg") no-repeat center/cover;
+}
+#lockScreen::after{
+  content:"";
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.35); /* oscurece imagen */
+  pointer-events:none;
+}
+
+/* --- Contenido sobre el fondo --- */
+.lockContent{
+  position:relative;
+  display:flex;flex-direction:column;
+  align-items:center;
+  z-index:1;
+  width:100%;
+  padding-top:env(safe-area-inset-top); /* statusbar iOS */
+  padding-bottom:env(safe-area-inset-bottom);
 }
 
 /* --- Corazón animado --- */
@@ -65,27 +87,30 @@ html,body{
   background:rgba(0,0,0,0.4);
   color:var(--text);
   display:flex;align-items:center;justify-content:center;
-  font-size:1.5rem;
+  font-size:2rem;
   cursor:pointer;
   backdrop-filter:blur(6px);
   transition:.2s;
 }
 .key:active{transform:scale(0.9);}
+.material-symbols-outlined{font-size:2rem;}
 </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="lockScreen">
-  <span class="material-symbols-outlined heart">partner_heart</span>
-  <div id="pinDots"></div>
-  <div id="keypad"></div>
-  <div id="errorText" style="margin-top:1rem;color:#ff8585;display:none;">Código incorrecto</div>
+  <div class="lockContent">
+    <span class="material-symbols-outlined heart">favorite</span>
+    <div id="pinDots"></div>
+    <div id="keypad"></div>
+    <div id="errorText" style="margin-top:1rem;color:#ff8585;display:none;">Código incorrecto</div>
+  </div>
 </div>
 
 <script>
 // --- Configuración ---
-const PASSWORD_HASH = "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d"; // reemplázalo por tu hash
-const PIN_LENGTH = 6; // por ejemplo 4 dígitos
+const PASSWORD_HASH = "coloca_aqui_tu_hash_SHA256"; // tu hash
+const PIN_LENGTH = 4;
 
 // --- Helpers ---
 async function hashPassword(pwd){
@@ -112,10 +137,9 @@ function shuffle(arr){
   }
   return arr;
 }
-
 function renderKeypad(){
   keypad.innerHTML="";
-  let nums=shuffle([...Array(10).keys()]); // 0-9 random
+  let nums=shuffle([...Array(10).keys()]);
   nums.forEach(n=>{
     const k=document.createElement("div");
     k.className="key";
@@ -123,18 +147,16 @@ function renderKeypad(){
     k.onclick=()=>enterDigit(n);
     keypad.appendChild(k);
   });
-
-  // Botón borrar
+  // borrar
   const del=document.createElement("div");
-  del.className="key";
-  del.innerHTML="⌫";
+  del.className="key material-symbols-outlined";
+  del.textContent="backspace";
   del.onclick=deleteDigit;
   keypad.appendChild(del);
-
-  // Botón enter
+  // enter
   const ok=document.createElement("div");
-  ok.className="key";
-  ok.innerHTML="✔";
+  ok.className="key material-symbols-outlined";
+  ok.textContent="check_circle";
   ok.onclick=checkPassword;
   keypad.appendChild(ok);
 }
@@ -158,13 +180,12 @@ async function checkPassword(){
   const hash=await hashPassword(input);
   if(hash===PASSWORD_HASH){
     document.getElementById("errorText").style.display="none";
-    // desbloquear (ejemplo: redirigir o quitar lock)
     alert("✔ Desbloqueado!");
   }else{
     document.getElementById("errorText").style.display="block";
     input="";
     dotEls.forEach(d=>d.classList.remove("filled"));
-    renderKeypad(); // remezclar
+    renderKeypad();
   }
 }
 </script>
