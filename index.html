@@ -1,310 +1,348 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" id="theme" content="#000000">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <title>Lock + Slides</title>
-  <style>
-    /* RESET */
-    * {margin:0;padding:0;box-sizing:border-box;}
-    body,html {
-      width:100%;height:100%;
-      overflow:hidden;
-      font-family:sans-serif;
-      background:#000;
-      color:#fff;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lock Numérico</title>
 
-    /* ----- LOCK OVERLAY ----- */
-    #lockOverlay {
-      position:fixed;
-      top:0;left:0;right:0;bottom:0;
-      background:url('momentos/foto1.jpg') no-repeat center center/cover;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-    }
-    #lockOverlay::after {
-      content:"";
-      position:absolute;
-      top:0;left:0;right:0;bottom:0;
-      background:rgba(0,0,0,0.45);
-    }
-    #lockContent {
-      position:relative;
-      z-index:1;
-      text-align:center;
-    }
-    .material-symbols-outlined {
-      font-size:42px;
-      color:white;
-      margin-bottom:20px;
-    }
-    #message {
-      margin-bottom:20px;
-      font-size:18px;
-    }
-    #keypad {
-      display:grid;
-      grid-template-columns:repeat(3,70px);
-      gap:15px;
-      justify-content:center;
-    }
-    #keypad button {
-      width:70px;height:70px;
-      border-radius:50%;
-      border:none;
-      font-size:24px;
-      font-weight:bold;
-      background:rgba(255,255,255,0.15);
-      color:#fff;
-      backdrop-filter:blur(5px);
-      transition:transform 0.1s;
-    }
-    #keypad button:active {transform:scale(0.9);}
-    .shake {animation:shake 0.3s;}
-    @keyframes shake {
-      0%{transform:translateX(-8px);}
-      25%{transform:translateX(8px);}
-      50%{transform:translateX(-6px);}
-      75%{transform:translateX(6px);}
-      100%{transform:translateX(0);}
-    }
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    /* ----- SLIDER ----- */
-    #slider {
-      width:100%;height:100%;
-      position:relative;
-      overflow:hidden;
-    }
-    .slide {
-      width:100%;height:100%;
-      position:absolute;
-      top:0;left:100%;
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-end;
-      align-items:flex-start;
-      padding:20px;
-      background-size:cover;
-      background-position:center;
-      transition:left 0.5s;
-    }
-    .slide.active {left:0;}
-    .content {
-      background:rgba(0,0,0,0.4);
-      padding:15px;
-      border-radius:10px;
-      max-width:90%;
-    }
-    .content h3 {margin-bottom:5px;font-size:20px;}
-    .content .date {font-size:14px;opacity:0.8;margin-bottom:10px;}
-    .content p {font-size:15px;}
+<!-- Fuentes -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
-    /* TOP BAR */
-    .topBar {
-      position:absolute;
-      top:0;left:0;right:0;
-      padding:10px;
-      display:flex;
-      align-items:center;
-      background:rgba(0,0,0,0.3);
-      backdrop-filter:blur(5px);
-      z-index:100;
-    }
-    .topBar input {
-      flex:1;
-      margin:0 10px;
-      padding:5px;
-      border:none;
-      border-radius:5px;
-      display:none;
-    }
-    .topBar.active input {display:block;}
-    .badge {
-      background:red;
-      padding:3px 8px;
-      border-radius:12px;
-      font-size:12px;
-      margin-left:10px;
-      display:none;
-    }
+<style>
+:root {
+  --primary: #ffa0e5;
+  --text: #ffffff;
+}
 
-    /* NAV BUTTONS */
-    .nav-btn {
-      position:absolute;
-      top:50%;
-      transform:translateY(-50%);
-      font-family:'Material Symbols Outlined';
-      font-size:40px;
-      color:white;
-      background:rgba(0,0,0,0.4);
-      padding:8px;
-      border-radius:50%;
-      cursor:pointer;
-      z-index:200;
-      user-select:none;
-    }
-    #leftArrow {left:10px;}
-    #rightArrow {right:10px;}
-  </style>
+/* --- Global --- */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+html,body{
+  width:100%;height:100dvh;min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  overflow:hidden;
+  background:#000;
+}
+
+/* --- Lock Screen --- */
+#lockScreen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  background:url("momentos/foto0.jpg") no-repeat center/cover;
+  transition:transform 0.7s ease-in-out;
+  z-index:10;
+}
+#lockScreen::after{
+  content:"";
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.35);
+  pointer-events:none;
+}
+.lockContent{
+  position:relative;
+  display:flex;flex-direction:column;
+  align-items:center;
+  z-index:1;
+  width:100%;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* Corazón animado */
+.heart{
+  font-size:3rem;
+  margin-bottom:1rem;
+  animation:heartbeat 1.8s infinite;
+}
+@keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
+
+/* PIN dots */
+#pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
+.dot{
+  width:.9rem;height:.9rem;border-radius:50%;
+  border:2px solid var(--text);
+  background:transparent;
+  transition:.2s;
+}
+.dot.filled{background:var(--text);}
+
+/* Mensaje */
+#message{
+  font-size:1.1rem;
+  margin-bottom:1rem;
+  min-height:1.5rem;
+  opacity:0;
+  transition:opacity .3s ease;
+}
+#message.show{opacity:1;}
+.shake{animation:shake .4s;}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%,60%{transform:translateX(-8px);}
+  40%,80%{transform:translateX(8px);}
+}
+
+/* Keypad */
+#keypad{
+  display:grid;
+  grid-template-columns:repeat(3,min(20vw,70px));
+  gap:1rem;
+  justify-content:center;
+}
+.key{
+  width:min(20vw,70px);height:min(20vw,70px);
+  border-radius:50%;
+  background:rgba(0,0,0,0.4);
+  color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  transition:.2s;
+  position:relative;
+  overflow:hidden;
+}
+.key:active{transform:scale(0.9);}
+.key::after{
+  content:"";
+  position:absolute;
+  width:120%;height:120%;
+  top:50%;left:50%;
+  background:rgba(255,255,255,0.2);
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(0);
+  transition:transform 0.4s, opacity 0.4s;
+  opacity:0;
+}
+.key:active::after{
+  transform:translate(-50%,-50%) scale(1);
+  opacity:1;
+}
+.material-symbols-outlined{font-size:2rem;}
+
+/* --- Stories --- */
+#stories{
+  position:fixed;inset:0;
+  background:#000;
+  overflow-y:auto;
+  scroll-snap-type:y mandatory;
+  transform:translateY(100%);
+  transition:transform 0.7s ease-in-out;
+  z-index:5;
+}
+.story{
+  min-height:100dvh;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  scroll-snap-align:start;
+  padding:2rem;
+  background-size:cover;
+  background-position:center;
+  position:relative;
+}
+.story::after{
+  content:"";
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.4);
+}
+.storyContent{
+  position:relative;
+  z-index:1;
+}
+.story h2{
+  font-family:"Dancing Script", cursive;
+  font-size:2rem;
+  margin-bottom:.5rem;
+}
+.story .date{
+  font-size:1rem;
+  opacity:0.8;
+  margin-bottom:1rem;
+}
+.story p{
+  font-size:1.1rem;
+  line-height:1.4;
+}
+</style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<!-- 🔒 LOCK SCREEN -->
-<div id="lockOverlay">
-  <div id="lockContent">
-    <span class="material-symbols-outlined">favorite</span>
-    <div id="message">Ingrese código</div>
+<!-- Lock -->
+<div id="lockScreen">
+  <div class="lockContent">
+    <span class="material-symbols-outlined heart">favorite</span>
+    <div id="message" class="show">Ingrese código</div>
+    <div id="pinDots"></div>
     <div id="keypad"></div>
   </div>
 </div>
 
-<!-- 📸 SLIDER -->
-<div id="slider">
-  <div class="slide" data-title="Una nueva historia" data-desc="Decididos a iniciar..." data-date="2025-08-12" style="background-image:url('momentos/foto1.jpg')"></div>
-  <div class="slide" data-title="Momento 2" data-desc="Descripción" data-date="2025-08-13" style="background-image:url('momentos/foto2.jpg')"></div>
-  <div class="slide" data-title="Momento 3" data-desc="Descripción" data-date="2025-08-14" style="background-image:url('momentos/foto3.jpg')"></div>
-  <!-- ... más slides ... -->
+<!-- Stories -->
+<div id="stories">
+  <section class="story" style="background-image:url('momentos/foto1.jpg')">
+    <div class="storyContent">
+      <h2>Una nueva historia</h2>
+      <div class="date">21 de agosto del 2025</div>
+      <p>Decididos a iniciar una increíble historia llena de retos, momentos, sentimientos y ganas de tener una casita propia juntos.</p>
+    </div>
+  </section>
+  <section class="story" style="background-image:url('momentos/foto2.jpg')">
+    <div class="storyContent">
+      <h2>Momento especial</h2>
+      <div class="date">10 de septiembre del 2025</div>
+      <p>Aquel día que reímos hasta que nos dolió la barriga y prometimos nunca soltarnos.</p>
+    </div>
+  </section>
+  <section class="story" style="background-image:url('momentos/foto3.jpg')">
+    <div class="storyContent">
+      <h2>Nuestro sueño</h2>
+      <div class="date">14 de febrero del 2026</div>
+      <p>Un día de amor, planes de futuro y la ilusión de seguir construyendo juntos.</p>
+    </div>
+  </section>
 </div>
-
-<div class="topBar" id="topBar">
-  <span id="searchBtn" class="material-symbols-outlined">search</span>
-  <input id="searchInput" type="number" inputmode="numeric" min="1">
-  <span id="counter"></span>
-  <span id="newBadge" class="badge">Nuevo</span>
-</div>
-
-<div id="leftArrow" class="nav-btn">chevron_left</div>
-<div id="rightArrow" class="nav-btn">chevron_right</div>
 
 <script>
-/* -------- LOCK -------- */
-const keypad = document.getElementById('keypad');
-const message = document.getElementById('message');
-let pin = "";
-const correctPIN = "1234";
-let attempts = 0;
-let lockUntil = null;
+// --- Configuración ---
+const PASSWORD_HASH = "coloca_aqui_tu_hash_SHA256"; 
+const PIN_LENGTH = 4;
 
-function generateKeypad() {
+// --- Bloqueos ---
+let attempts = parseInt(localStorage.getItem("attempts")||"0");
+let blockLevel = parseInt(localStorage.getItem("blockLevel")||"0");
+let blockedUntil = parseInt(localStorage.getItem("blockedUntil")||"0");
+const blockTimes = [15*60*1000,30*60*1000,60*60*1000,24*60*60*1000];
+const maxBlock = 30*24*60*60*1000;
+
+// --- Helpers ---
+async function hashPassword(pwd){
+  const enc=new TextEncoder().encode(pwd);
+  const buf=await crypto.subtle.digest("SHA-256",enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function now(){return Date.now();}
+
+// --- Dots ---
+const dots=document.getElementById("pinDots");
+for(let i=0;i<PIN_LENGTH;i++){
+  const d=document.createElement("div");
+  d.className="dot";
+  dots.appendChild(d);
+}
+const dotEls=[...document.querySelectorAll(".dot")];
+const msg=document.getElementById("message");
+const lockScreen=document.getElementById("lockScreen");
+const stories=document.getElementById("stories");
+
+// --- Keypad ---
+const keypad=document.getElementById("keypad");
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function renderKeypad(){
   keypad.innerHTML="";
-  const nums = Array.from({length:10},(_,i)=>i).sort(()=>Math.random()-0.5);
+  let nums=shuffle([...Array(10).keys()]);
   nums.forEach(n=>{
-    const btn=document.createElement('button');
-    btn.textContent=n;
-    btn.onclick=()=>enterDigit(n);
-    keypad.appendChild(btn);
+    const k=document.createElement("div");
+    k.className="key";
+    k.textContent=n;
+    k.onclick=()=>enterDigit(n);
+    keypad.appendChild(k);
   });
+  const del=document.createElement("div");
+  del.className="key material-symbols-outlined";
+  del.textContent="backspace";
+  del.onclick=deleteDigit;
+  keypad.appendChild(del);
+  const ok=document.createElement("div");
+  ok.className="key material-symbols-outlined";
+  ok.textContent="check_circle";
+  ok.onclick=checkPassword;
+  keypad.appendChild(ok);
 }
-function enterDigit(n) {
-  if(lockUntil && Date.now()<lockUntil){
-    message.textContent="Bloqueado, espera...";
-    return;
+renderKeypad();
+
+// --- Lógica ---
+let input="";
+function enterDigit(n){
+  if(isBlocked())return;
+  if(input.length>=PIN_LENGTH)return;
+  input+=n;
+  dotEls[input.length-1].classList.add("filled");
+}
+function deleteDigit(){
+  if(input.length>0){
+    dotEls[input.length-1].classList.remove("filled");
+    input=input.slice(0,-1);
   }
-  pin+=n;
-  if(pin.length===correctPIN.length){
-    if(pin===correctPIN){
-      document.getElementById('lockOverlay').style.display="none";
-      initSlides();
-    } else {
-      attempts++;
-      pin="";
-      message.textContent="Código incorrecto";
-      keypad.classList.add("shake");
-      setTimeout(()=>keypad.classList.remove("shake"),300);
-      if(attempts>=4){
-        const times=[15,30,60,1440,43200];
-        const t=times[Math.min(attempts-4,times.length-1)];
-        lockUntil=Date.now()+t*60000;
-        message.textContent=`Bloqueado por ${t>=1440?t/1440+" días":t+" minutos"}`;
-      }
+}
+function isBlocked(){
+  if(now()<blockedUntil){
+    const left=Math.ceil((blockedUntil-now())/1000/60);
+    showMessage(`Bloqueado ${left} min`);
+    return true;
+  }
+  return false;
+}
+function showMessage(text,shake=false){
+  msg.classList.remove("show");
+  setTimeout(()=>{
+    msg.textContent=text;
+    msg.classList.add("show");
+    if(shake){
+      msg.classList.add("shake");
+      setTimeout(()=>msg.classList.remove("shake"),400);
+    }
+  },200);
+}
+async function checkPassword(){
+  if(isBlocked())return;
+  if(input.length!==PIN_LENGTH)return;
+  const hash=await hashPassword(input);
+  if(hash===PASSWORD_HASH){
+    showMessage("✔ Desbloqueado!");
+    localStorage.removeItem("attempts");
+    localStorage.removeItem("blockLevel");
+    localStorage.removeItem("blockedUntil");
+    // animación desbloqueo
+    lockScreen.style.transform="translateY(-100%)";
+    stories.style.transform="translateY(0)";
+  }else{
+    attempts++;
+    localStorage.setItem("attempts",attempts);
+    showMessage("Código incorrecto",true);
+    input="";
+    dotEls.forEach(d=>d.classList.remove("filled"));
+    renderKeypad();
+    if(attempts>=4){
+      attempts=0;
+      blockLevel++;
+      let blockTime=blockTimes[blockLevel-1]||maxBlock;
+      blockedUntil=now()+blockTime;
+      localStorage.setItem("attempts",attempts);
+      localStorage.setItem("blockLevel",blockLevel);
+      localStorage.setItem("blockedUntil",blockedUntil);
+      isBlocked();
     }
   }
 }
-generateKeypad();
 
-/* -------- SLIDES -------- */
-function initSlides(){
-  const slides=document.querySelectorAll('.slide'),
-        counter=document.getElementById('counter'),
-        searchBtn=document.getElementById('searchBtn'),
-        searchIn=document.getElementById('searchInput'),
-        topBar=document.getElementById('topBar');
-  const months=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-
-  slides.forEach((s,i)=>{
-    const d=new Date(s.dataset.date);
-    const div=document.createElement('div');
-    div.className="content";
-    div.innerHTML=`<h3>${s.dataset.title}</h3>
-    <div class="date">${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
-    <p>${s.dataset.desc}</p>`;
-    s.appendChild(div);
-  });
-
-  let current=0;
-  slides[current].classList.add("active");
-  counter.textContent=`1 / ${slides.length}`;
-
-  document.getElementById('leftArrow').onclick=()=>changeSlide(-1);
-  document.getElementById('rightArrow').onclick=()=>changeSlide(1);
-
-  function changeSlide(dir){
-    slides[current].classList.remove("active");
-    current=(current+dir+slides.length)%slides.length;
-    slides[current].classList.add("active");
-    counter.textContent=`${current+1} / ${slides.length}`;
-  }
-
-  // buscador
-  searchBtn.onclick=(e)=>{
-    e.stopPropagation();
-    topBar.classList.add('active');
-    searchIn.focus();
-  };
-  searchIn.addEventListener('keypress',function(e){
-    if(e.key==='Enter'){
-      const n=parseInt(this.value);
-      if(n>=1&&n<=slides.length){
-        slides[current].classList.remove('active');
-        current=n-1;
-        slides[current].classList.add('active');
-        counter.textContent=(current+1)+' / '+slides.length;
-      }
-      resetSearch();
-    }
-  });
-  function resetSearch(){
-    searchIn.value='';
-    topBar.classList.remove('active');
-  }
-
-  // badge
-  const b=document.getElementById('newBadge');
-  const slidesSeen=parseInt(localStorage.getItem('slidesSeen')||'0');
-  if(slides.length>slidesSeen){
-    b.style.display='inline-block';
-    setTimeout(()=>{
-      b.style.animation="badgeShake 0.5s";
-      setTimeout(()=>b.style.animation="",500);
-    },3000);
-    document.addEventListener('click',()=>{
-      b.style.display='none';
-      localStorage.setItem('slidesSeen',slides.length);
-    },{once:true});
-  }
+// --- PWA Service Worker ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(reg => console.log("SW registrado", reg))
+    .catch(err => console.error("Error registrando SW", err));
 }
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
 </html>
