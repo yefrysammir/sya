@@ -1,0 +1,20 @@
+[
+  {
+    "titulo": "Una nueva historia",
+    "fecha": "2025-08-21",
+    "descripcion": "Decididos a iniciar una increíble historia llena de retos, momentos, sentimientos y ganas de tener una casita propia juntos.",
+    "fondo": "momentos/foto1.jpg"
+  },
+  {
+    "titulo": "Momento especial",
+    "fecha": "2025-09-10",
+    "descripcion": "Aquel día que reímos hasta que nos dolió la barriga y prometimos nunca soltarnos.",
+    "fondo": "momentos/foto2.jpg"
+  },
+  {
+    "titulo": "Nuestro sueño",
+    "fecha": "2026-02-14",
+    "descripcion": "Un día de amor, planes de futuro y la ilusión de seguir construyendo juntos.",
+    "fondo": "momentos/foto3.jpg"
+  }
+]
