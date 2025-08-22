@@ -89,15 +89,21 @@ html,body{
 /* Barra contador */
 #topbar{
   position:fixed;top:0;left:0;width:100%;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
   background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
   padding:.5rem;z-index:10;
 }
 #slideCounter{
-  width:100px;padding:.3rem .6rem;
+  width:60px;padding:.3rem .6rem;
   border-radius:20px;border:none;
   text-align:center;font-size:1rem;
   -webkit-appearance:none;
+}
+#totalSlides{font-size:1rem;}
+#addBtn{
+  padding:.3rem .7rem;border-radius:20px;
+  border:none;background:var(--primary);color:#000;
+  font-size:.9rem;cursor:pointer;
 }
 </style>
 </head>
@@ -115,6 +121,8 @@ html,body{
 <div id="slidesWrapper">
   <div id="topbar">
     <input type="number" id="slideCounter" inputmode="numeric" pattern="[0-9]*">
+    <span id="totalSlides"></span>
+    <button id="addBtn">+ Nuevo</button>
   </div>
   <div id="slidesContainer" style="display:flex;flex-direction:column;height:100%;transition:transform .4s ease;"></div>
 </div>
@@ -138,14 +146,12 @@ function renderKeypad(){
   shuffle([...Array(10).keys()]).forEach(n=>{
     const k=document.createElement("div");
     k.className="key";k.textContent=n;
-    k.addEventListener("touchstart",()=>enterDigit(n));
-    k.addEventListener("click",()=>enterDigit(n));
+    k.addEventListener("pointerdown",()=>enterDigit(n));
     keypad.appendChild(k);
   });
   const del=document.createElement("div");
   del.className="key material-symbols-outlined";del.textContent="backspace";
-  del.addEventListener("touchstart",deleteDigit);
-  del.addEventListener("click",deleteDigit);
+  del.addEventListener("pointerdown",deleteDigit);
   keypad.appendChild(del);
 }
 renderKeypad();
@@ -184,7 +190,7 @@ function unlock(){
 }
 
 // --- Slides JSON ---
-const slidesData=[
+let slidesData=[
   {title:"Una nueva historia",date:"21 de agosto del 2025",desc:"Decididos a iniciar una increíble historia llena de retos, momentos y sentimientos."},
   {title:"Momento especial",date:"22 de agosto del 2025",desc:"Un día para recordar juntos y sonreír."},
   {title:"Nuestro futuro",date:"23 de agosto del 2025",desc:"Soñando con la casita propia, construyendo nuestro hogar."}
@@ -192,14 +198,22 @@ const slidesData=[
 
 let currentIndex=0;
 const slidesContainer=document.getElementById("slidesContainer");
+const totalSlides=document.getElementById("totalSlides");
+
 function initSlides(){
+  renderSlides();
+  updateCounter();
+}
+
+function renderSlides(){
+  slidesContainer.innerHTML="";
   slidesData.forEach(s=>{
     const el=document.createElement("div");
     el.className="slide";
     el.innerHTML=`<h2>${s.title}</h2><small>${s.date}</small><p>${s.desc}</p>`;
     slidesContainer.appendChild(el);
   });
-  updateCounter();
+  totalSlides.textContent=`/ ${slidesData.length}`;
 }
 
 // --- Navegación touch con loop ---
@@ -231,6 +245,22 @@ function updateCounter(){
 document.getElementById("slideCounter").addEventListener("change",e=>{
   let val=parseInt(e.target.value)-1;
   if(val>=0 && val<slidesData.length){currentIndex=val;updateTransform();}
+});
+
+// --- Botón agregar nuevo ---
+document.getElementById("addBtn").addEventListener("click",()=>{
+  let title=prompt("Título del momento:");
+  if(!title) return;
+  let date=prompt("Fecha (ej: 24 de agosto del 2025):");
+  if(!date) return;
+  let desc=prompt("Descripción:");
+  if(!desc) return;
+
+  slidesData.push({title,date,desc});
+  renderSlides();
+  totalSlides.textContent=`/ ${slidesData.length}`;
+  currentIndex=slidesData.length-1;
+  updateTransform();
 });
 
 // --- SW ---
