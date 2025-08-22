@@ -81,18 +81,19 @@ html,body{
   color:var(--text);
   display:flex;align-items:center;justify-content:center;
   font-size:2rem;cursor:pointer;backdrop-filter:blur(6px);
-  transition:.2s;position:relative;overflow:hidden;
+  transition:.18s;position:relative;overflow:hidden;
+  touch-action:manipulation;
 }
 .key.active{transform:scale(0.9);}
 .key::after{
   content:"";position:absolute;width:120%;height:120%;top:50%;left:50%;
   background:rgba(255,255,255,0.2);border-radius:50%;
-  transform:translate(-50%,-50%) scale(0);transition:transform .4s,opacity .4s;opacity:0;
+  transform:translate(-50%,-50%) scale(0);transition:transform .3s,opacity .3s;opacity:0;
 }
 .key.active::after{transform:translate(-50%,-50%) scale(1);opacity:1;}
 .material-symbols-outlined{font-size:2rem;}
 
-/* --- Topbar Stories --- */
+/* --- Topbar Stories (buscador + contador) --- */
 #topbar{
   position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:6;
   display:flex;justify-content:center;padding:.5rem 1rem;
@@ -112,18 +113,21 @@ html,body{
 /* --- Stories --- */
 #stories{
   position:fixed;inset:0;background:#000;
-  overflow-y:auto;
+  overflow-y:auto; /* scroll vertical */
   scroll-snap-type:y mandatory;
-  transform:translateY(100%);
+  transform:translateY(100%); /* oculto al inicio */
   transition:transform 0.7s ease-in-out;
   z-index:5;
-  scrollbar-width:none;
+  /* Ocultar scrollbars */
+  scrollbar-width:none; /* Firefox */
 }
-#stories::-webkit-scrollbar{display:none;}
+#stories::-webkit-scrollbar{display:none;} /* WebKit */
+
 .story{
-  min-height:100dvh;width:100%;
+  height:100dvh; /* altura fija por página para cálculo perfecto */
+  width:100%;
   display:flex;flex-direction:column;justify-content:center;align-items:center;
-  text-align:center;scroll-snap-align:start;
+  text-align:center;scroll-snap-align:start;scroll-snap-stop:always;
   padding:2rem;background-size:cover;background-position:center;position:relative;
 }
 .story::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.4);}
@@ -131,6 +135,12 @@ html,body{
 .story h2{font-family:"Dancing Script", cursive;font-size:2rem;margin-bottom:.5rem;}
 .story .date{font-size:1rem;opacity:.85;margin-bottom:1rem;}
 .story p{font-size:1.1rem;line-height:1.4;}
+
+/* Pequeños ajustes responsivos */
+@media (min-width:768px){
+  .story h2{font-size:2.4rem;}
+  .story p{font-size:1.2rem;}
+}
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -155,27 +165,58 @@ html,body{
 </div>
 
 <!-- Stories -->
-<div id="stories" aria-label="Historias de pareja"></div>
+<div id="stories" aria-label="Historias de pareja">
+  <!-- Se inyectan historias y copias para loop infinito -->
+</div>
 
-<!-- JSON -->
+<!-- JSON de recuerdos -->
 <script id="recuerdosJSON" type="application/json">
 [
-  {"titulo":"Una nueva historia","fecha":"2025-08-21","descripcion":"Decididos a iniciar una increíble historia.","fondo":"momentos/foto1.jpg"},
-  {"titulo":"Momento especial","fecha":"2025-09-10","descripcion":"Aquel día que reímos mucho.","fondo":"momentos/foto2.jpg"},
-  {"titulo":"Nuestro sueño","fecha":"2026-02-14","descripcion":"Un día de amor y planes.","fondo":"momentos/foto3.jpg"}
+  {
+    "titulo": "Una nueva historia",
+    "fecha": "2025-08-21",
+    "descripcion": "Decididos a iniciar una increíble historia llena de retos, momentos, sentimientos y ganas de tener una casita propia juntos.",
+    "fondo": "momentos/foto1.jpg"
+  },
+  {
+    "titulo": "Momento especial",
+    "fecha": "2025-09-10",
+    "descripcion": "Aquel día que reímos hasta que nos dolió la barriga y prometimos nunca soltarnos.",
+    "fondo": "momentos/foto2.jpg"
+  },
+  {
+    "titulo": "Nuestro sueño",
+    "fecha": "2026-02-14",
+    "descripcion": "Un día de amor, planes de futuro y la ilusión de seguir construyendo juntos.",
+    "fondo": "momentos/foto3.jpg"
+  }
 ]
 </script>
 
 <script>
-// Config
-const PASSWORD_HASH="4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d";
-const PIN_LENGTH=6;
+// ==================== Configuración ====================
+const PASSWORD_HASH = "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d";
+const PIN_LENGTH = 6;
 
-// Elements
-const keypad=document.getElementById("keypad");
+// Bloqueos (se mantienen tal cual tu base)
+let attempts = parseInt(localStorage.getItem("attempts")||"0");
+let blockLevel = parseInt(localStorage.getItem("blockLevel")||"0");
+let blockedUntil = parseInt(localStorage.getItem("blockedUntil")||"0");
+const blockTimes = [15*60*1000, 30*60*1000, 60*60*1000, 24*60*60*1000];
+const maxBlock = 30*24*60*60*1000;
+
+// Helpers
+async function hashPassword(pwd){
+  const enc=new TextEncoder().encode(pwd);
+  const buf=await crypto.subtle.digest("SHA-256",enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+const now=()=>Date.now();
+
+// ==================== Elementos ====================
 const dots=document.getElementById("pinDots");
-const dotEls=[]; for(let i=0;i<PIN_LENGTH;i++){let d=document.createElement("div");d.className="dot";dots.appendChild(d);dotEls.push(d);}
 const msg=document.getElementById("message");
+const keypad=document.getElementById("keypad");
 const lockScreen=document.getElementById("lockScreen");
 const stories=document.getElementById("stories");
 const topbar=document.getElementById("topbar");
@@ -183,99 +224,282 @@ const slideSearch=document.getElementById("slideSearch");
 const currentIdxEl=document.getElementById("currentIdx");
 const totalIdxEl=document.getElementById("totalIdx");
 
-// Keypad
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+// ==================== Dots PIN ====================
+for(let i=0;i<PIN_LENGTH;i++){
+  const d=document.createElement("div");
+  d.className="dot";
+  dots.appendChild(d);
+}
+const dotEls=[...document.querySelectorAll(".dot")];
+
+// ==================== Keypad: pointerdown/pointerup ====================
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function attachKeyInteractions(el, onPress){
+  const press = (e)=>{ e.preventDefault(); el.classList.add("active"); onPress(); };
+  const release = ()=> el.classList.remove("active");
+  el.addEventListener("pointerdown", press, {passive:false});
+  el.addEventListener("pointerup", release);
+  el.addEventListener("pointercancel", release);
+  el.addEventListener("pointerleave", release);
+}
 function renderKeypad(){
   keypad.innerHTML="";
   let nums=shuffle([...Array(10).keys()]);
   nums.forEach(n=>{
     const k=document.createElement("div");
-    k.className="key"; k.textContent=n;
-    k.addEventListener("pointerdown",()=>{k.classList.add("active");enterDigit(n);});
-    k.addEventListener("pointerup",()=>k.classList.remove("active"));
+    k.className="key";
+    k.textContent=n;
+    attachKeyInteractions(k, ()=>enterDigit(n));
     keypad.appendChild(k);
   });
+  // borrar
   const del=document.createElement("div");
-  del.className="key material-symbols-outlined";del.textContent="backspace";
-  del.addEventListener("pointerdown",()=>{del.classList.add("active");deleteDigit();});
-  del.addEventListener("pointerup",()=>del.classList.remove("active"));
+  del.className="key material-symbols-outlined";
+  del.textContent="backspace";
+  del.title = "Borrar";
+  attachKeyInteractions(del, deleteDigit);
   keypad.appendChild(del);
 }
 renderKeypad();
 
-// PIN
+// ==================== Lógica PIN ====================
 let input="";
-async function hashPassword(pwd){
-  const enc=new TextEncoder().encode(pwd);
-  const buf=await crypto.subtle.digest("SHA-256",enc);
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-}
 function enterDigit(n){
-  if(input.length>=PIN_LENGTH)return;
-  input+=n;dotEls[input.length-1].classList.add("filled");
-  if(input.length===PIN_LENGTH)checkPassword();
+  if(isBlocked())return;
+  if(input.length>=PIN_LENGTH) return;
+  input+=String(n);
+  dotEls[input.length-1].classList.add("filled");
+  if(input.length===PIN_LENGTH){
+    checkPassword();
+  }
 }
 function deleteDigit(){
-  if(input.length>0){dotEls[input.length-1].classList.remove("filled");input=input.slice(0,-1);}
+  if(input.length>0){
+    dotEls[input.length-1].classList.remove("filled");
+    input=input.slice(0,-1);
+  }
 }
-function showMessage(t){msg.textContent=t;msg.classList.add("show");}
+function isBlocked(){
+  if(now()<blockedUntil){
+    const left=Math.ceil((blockedUntil-now())/60000);
+    showMessage(`Bloqueado ${left} min`);
+    return true;
+  }
+  return false;
+}
+function showMessage(text,shake=false){
+  msg.classList.remove("show");
+  setTimeout(()=>{
+    msg.textContent=text;
+    msg.classList.add("show");
+    if(shake){
+      msg.classList.add("shake");
+      setTimeout(()=>msg.classList.remove("shake"),400);
+    }
+  },150);
+}
 async function checkPassword(){
-  const h=await hashPassword(input);
-  if(h===PASSWORD_HASH){
+  if(isBlocked())return;
+  if(input.length!==PIN_LENGTH)return;
+  const hash=await hashPassword(input);
+  if(hash===PASSWORD_HASH){
+    showMessage("✔ Desbloqueado!");
+    localStorage.removeItem("attempts");
+    localStorage.removeItem("blockLevel");
+    localStorage.removeItem("blockedUntil");
+    // animación desbloqueo
     lockScreen.style.transform="translateY(-100%)";
     stories.style.transform="translateY(0)";
     topbar.style.display="flex";
+    // Bloquear scroll del documento y permitir solo stories
+    document.documentElement.style.overflow="hidden";
+    document.body.style.overflow="hidden";
+    // Preparar carrusel infinito una vez desbloqueado
+    initInfiniteStories();
   }else{
-    input="";dotEls.forEach(d=>d.classList.remove("filled"));renderKeypad();showMessage("Incorrecto");
+    attempts++;
+    localStorage.setItem("attempts",attempts);
+    showMessage("Código incorrecto",true);
+    input="";
+    dotEls.forEach(d=>d.classList.remove("filled"));
+    renderKeypad();
+    if(attempts>=4){
+      attempts=0; blockLevel++;
+      let blockTime=blockTimes[blockLevel-1]||maxBlock;
+      blockedUntil=now()+blockTime;
+      localStorage.setItem("attempts",attempts);
+      localStorage.setItem("blockLevel",blockLevel);
+      localStorage.setItem("blockedUntil",blockedUntil);
+      isBlocked();
+    }
   }
 }
 
-// Stories
-function formatDate(iso){
-  const d=new Date(iso+"T12:00:00");
-  const m=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-  return `${d.getDate()} de ${m[d.getMonth()]} del ${d.getFullYear()}`;
+// ==================== Historias desde JSON ====================
+function formateaFechaES(iso){
+  // Devuelve "21 de agosto del 2025"
+  try{
+    const d=new Date(iso+"T12:00:00"); // evita desfases TZ
+    const dia = d.getDate();
+    const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    const mes = meses[d.getMonth()];
+    const anio = d.getFullYear();
+    return `${dia} de ${mes} del ${anio}`;
+  }catch(e){ return iso; }
 }
-function crearStory(o){
-  const s=document.createElement("section");
-  s.className="story";s.style.backgroundImage=`url(${o.fondo})`;
-  s.innerHTML=`<div class="storyContent"><h2>${o.titulo}</h2><div class="date">${formatDate(o.fecha)}</div><p>${o.descripcion}</p></div>`;
-  return s;
+function crearStory({titulo,fecha,descripcion,fondo}, originalIndex){
+  const sec=document.createElement("section");
+  sec.className="story";
+  sec.style.backgroundImage=`url('${fondo}')`;
+  sec.dataset.original = String(originalIndex); // 0..N-1 para contador
+  sec.innerHTML = `
+    <div class="storyContent">
+      <h2>${titulo}</h2>
+      <div class="date">${formateaFechaES(fecha)}</div>
+      <p>${descripcion}</p>
+    </div>
+  `;
+  return sec;
 }
-let historias=[];
-(function montar(){
-  historias=JSON.parse(document.getElementById("recuerdosJSON").textContent);
-  historias.forEach(x=>stories.appendChild(crearStory(x)));
-  totalIdxEl.textContent=historias.length;
+
+let historias = [];
+(function leerHistorias(){
+  const raw = document.getElementById("recuerdosJSON").textContent.trim();
+  try{ historias = JSON.parse(raw); }catch(e){ historias=[]; console.error("JSON inválido", e); }
+  totalIdxEl.textContent = String(historias.length || 1);
 })();
-let currentIndex=1;
-function irASlide(n){
-  if(!historias.length)return;
-  let max=historias.length;
-  if(n<1) n=max; if(n>max) n=1;
-  stories.children[n-1].scrollIntoView({behavior:"smooth",block:"start"});
-}
-slideSearch.addEventListener("change",()=>{let v=parseInt(slideSearch.value);if(!isNaN(v))irASlide(v);});
 
-// Loop con scroll
-stories.addEventListener("scroll",()=>{
-  let idx=[...stories.children].findIndex(sec=>{
-    let rect=sec.getBoundingClientRect();
-    return rect.top>=0 && rect.top<window.innerHeight*0.6;
-  });
-  if(idx>=0){currentIndex=idx+1;currentIdxEl.textContent=currentIndex;}
-});
+// ==================== Carrusel infinito tipo Instagram ====================
+let observer=null;
+let resizeObserver=null;
+let pageH=0;
+const COPIAS = 3; // pre, medio, post
 
-// Swipe loop
-let touchStartY=0;
-stories.addEventListener("touchstart",e=>touchStartY=e.touches[0].clientY,{passive:true});
-stories.addEventListener("touchend",e=>{
-  let dy=e.changedTouches[0].clientY-touchStartY;
-  if(Math.abs(dy)>50){
-    if(dy<0) irASlide(currentIndex+1);
-    else irASlide(currentIndex-1);
+function buildInfiniteDOM(){
+  stories.innerHTML="";
+  if(observer){ observer.disconnect(); }
+  const frag=document.createDocumentFragment();
+  // Creamos 3 copias consecutivas
+  for(let c=0;c<COPIAS;c++){
+    historias.forEach((item,idx)=>{
+      const node = crearStory(item, idx);
+      frag.appendChild(node);
+    });
   }
-});
+  stories.appendChild(frag);
+
+  // Observer para contador (siempre 1..N)
+  observer = new IntersectionObserver((entries)=>{
+    entries.forEach(ent=>{
+      if(ent.isIntersecting){
+        const orig = parseInt(ent.target.dataset.original,10); // 0..N-1
+        currentIdxEl.textContent = String(orig+1);
+      }
+    });
+  },{root:stories, threshold:0.55});
+
+  [...stories.children].forEach(sec=>observer.observe(sec));
+}
+
+function updatePageHeight(){
+  pageH = stories.clientHeight || window.innerHeight;
+}
+
+function jumpToMiddleSamePage(){
+  // Calcula la página actual (entera) y la traslada al bloque del medio
+  const totalOriginal = historias.length;
+  if(totalOriginal===0) return;
+
+  const page = Math.round(stories.scrollTop / pageH); // 0..(N*COPIAS-1)
+  const inPre  = page < totalOriginal;
+  const inPost = page >= (2*totalOriginal);
+  if(inPre){
+    // Mover misma página +N (al bloque central)
+    stories.scrollTop = stories.scrollTop + totalOriginal * pageH;
+  }else if(inPost){
+    // Mover misma página -N (al bloque central)
+    stories.scrollTop = stories.scrollTop - totalOriginal * pageH;
+  }
+}
+
+let scrollEndTimer=null;
+function onScroll(){
+  // Debounce para detectar "scroll-end"
+  if(scrollEndTimer) clearTimeout(scrollEndTimer);
+  scrollEndTimer = setTimeout(()=>{
+    jumpToMiddleSamePage(); // re-ancla al bloque del medio sin que el usuario lo note
+  }, 90);
+}
+
+function goToSlide(n){
+  // Ir siempre al bloque central para mantener “espacio” arriba/abajo
+  const totalOriginal = historias.length;
+  if(totalOriginal===0) return;
+  let idx = Math.max(1, Math.min(totalOriginal, n|0)); // 1..N
+  const targetPage = (totalOriginal) + (idx-1); // copia del medio
+  stories.scrollTo({top: targetPage * pageH, behavior: "smooth"});
+}
+
+function initInfiniteStories(){
+  buildInfiniteDOM();
+  updatePageHeight();
+
+  // Posiciona al primer slide en la copia del medio
+  requestAnimationFrame(()=>{
+    stories.scrollTop = historias.length * pageH; // 1er slide del bloque central
+  });
+
+  // Eventos
+  stories.addEventListener("scroll", onScroll, {passive:true});
+
+  // Buscador numérico
+  slideSearch.addEventListener("change", ()=>{
+    const val = parseInt(slideSearch.value,10);
+    if(!isNaN(val)) goToSlide(val);
+  });
+  slideSearch.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"){
+      const val = parseInt(slideSearch.value,10);
+      if(!isNaN(val)) goToSlide(val);
+    }
+  });
+
+  // Recalcular en rotación/cambio de viewport
+  if(resizeObserver){ resizeObserver.disconnect(); }
+  resizeObserver = new ResizeObserver(()=>{
+    const prevPage = Math.round(stories.scrollTop / (pageH||1));
+    updatePageHeight();
+    // Recolocar al mismo “número de página” tras el cambio de altura
+    stories.scrollTop = prevPage * pageH;
+  });
+  resizeObserver.observe(stories);
+}
+
+// ==================== Antizoom (JS) ====================
+// Evita pinch-zoom
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
+
+// Evita double-tap zoom
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(e){
+  const now = Date.now();
+  if(now - lastTouchEnd <= 300){ e.preventDefault(); }
+  lastTouchEnd = now;
+}, {passive:false});
+
+// Evita zoom con Ctrl (por si se abre en desktop)
+document.addEventListener('wheel', e=>{
+  if(e.ctrlKey){ e.preventDefault(); }
+}, {passive:false});
+
+// ==================== PWA Service Worker ====================
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js')
+    .then(reg => console.log("SW registrado", reg))
+    .catch(err => console.error("Error registrando SW", err));
+}
 </script>
 </body>
 </html>
