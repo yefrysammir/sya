@@ -2,272 +2,165 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>Lock Numérico</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- Fuentes / Iconos -->
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
 <style>
 :root {
   --primary: #ffa0e5;
-  --text: #ffffff;
-  --glass: rgba(0,0,0,0.4);
+  --text: #fff;
 }
 
 /* --- Global --- */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
 html,body{
-  width:100%;height:100dvh;min-height:100vh;
+  width:100%;height:100dvh;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color:var(--text);
   overflow:hidden;
   background:#000;
-  -webkit-text-size-adjust:100%; /* evita zoom de fuente en iOS */
 }
 
-/* --- Lock Screen --- */
+/* --- LockScreen --- */
 #lockScreen{
   position:fixed;inset:0;
   display:flex;flex-direction:column;
   justify-content:center;align-items:center;
   background:url("momentos/foto0.jpg") no-repeat center/cover;
-  transition:transform 0.7s ease-in-out;
-  z-index:10;
 }
 #lockScreen::after{
-  content:"";
-  position:absolute;inset:0;
+  content:"";position:absolute;inset:0;
   background:rgba(0,0,0,0.35);
-  pointer-events:none;
 }
-.lockContent{
-  position:relative;display:flex;flex-direction:column;align-items:center;z-index:1;width:100%;
-  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
-}
+.lockContent{position:relative;display:flex;flex-direction:column;align-items:center;z-index:1;width:100%;}
 
-/* Corazón animado */
+/* Corazón */
 .heart{font-size:3rem;margin-bottom:1rem;animation:heartbeat 1.8s infinite;}
 @keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
 
-/* PIN dots */
+/* Indicador PIN */
 #pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
-.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid var(--text);background:transparent;transition:.2s;}
+.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid var(--text);transition:.2s;}
 .dot.filled{background:var(--text);}
 
 /* Mensaje */
-#message{font-size:1.1rem;margin-bottom:1rem;min-height:1.5rem;opacity:0;transition:opacity .3s ease;}
-#message.show{opacity:1;}
+#message{font-size:1.1rem;margin-bottom:1rem;min-height:1.5rem;transition:.3s;}
 .shake{animation:shake .4s;}
 @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
 
 /* Keypad */
-#keypad{
-  display:grid;
-  grid-template-columns:repeat(3,min(20vw,70px));
-  gap:1rem;justify-content:center;
-}
+#keypad{display:grid;grid-template-columns:repeat(3,70px);gap:1rem;justify-content:center;}
 .key{
-  width:min(20vw,70px);height:min(20vw,70px);
-  border-radius:50%;
-  background:var(--glass);
-  color:var(--text);
+  width:70px;height:70px;border-radius:50%;
+  background:rgba(0,0,0,0.4);color:var(--text);
   display:flex;align-items:center;justify-content:center;
-  font-size:2rem;cursor:pointer;backdrop-filter:blur(6px);
-  transition:.2s;position:relative;overflow:hidden;
+  font-size:2rem;cursor:pointer;
+  backdrop-filter:blur(6px);
+  transition:.15s;
+  touch-action:manipulation;
 }
 .key:active{transform:scale(0.9);}
-.key::after{
-  content:"";position:absolute;width:120%;height:120%;top:50%;left:50%;
-  background:rgba(255,255,255,0.2);border-radius:50%;
-  transform:translate(-50%,-50%) scale(0);transition:transform .4s,opacity .4s;opacity:0;
-}
-.key:active::after{transform:translate(-50%,-50%) scale(1);opacity:1;}
 .material-symbols-outlined{font-size:2rem;}
 
-/* --- Topbar Stories (buscador + contador) --- */
+/* --- Slides --- */
+#slidesWrapper{display:none;position:fixed;inset:0;overflow:hidden;}
+.slide{
+  width:100%;height:100%;
+  flex-shrink:0;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  background:#000;color:#fff;
+  padding:2rem;text-align:center;
+  font-family:'Dancing Script',cursive;
+  font-size:1.2rem;
+}
+.slide h2{font-size:2rem;margin-bottom:.5rem;}
+.slide p{font-size:1rem;max-width:90%;}
+.slide small{opacity:.7;margin-top:.5rem;}
+
+/* Barra contador */
 #topbar{
-  position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:6;
-  display:flex;justify-content:center;padding:.5rem 1rem;
+  position:fixed;top:0;left:0;width:100%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+  padding:.5rem;z-index:10;
 }
-.searchWrap{
-  flex:1;max-width:700px;display:flex;align-items:center;gap:.5rem;
-  background:var(--glass);backdrop-filter:blur(6px);border-radius:999px;padding:.35rem .75rem;
-}
-.searchWrap .icon{font-size:1.4rem;opacity:.9;}
-#slideSearch{
-  flex:1;border:none;outline:none;background:transparent;color:var(--text);
-  font-size:1rem;padding:.35rem 0;
-}
-#slideSearch::placeholder{color:#ddd;opacity:.7;}
-.counter{
-  font-variant-numeric:tabular-nums;
-  opacity:.9;white-space:nowrap;
-}
-
-/* --- Stories --- */
-#stories{
-  position:fixed;inset:0;background:#000;
-  overflow-y:auto; /* scroll vertical */
-  scroll-snap-type:y mandatory;
-  transform:translateY(100%); /* oculto al inicio */
-  transition:transform 0.7s ease-in-out;
-  z-index:5;
-  /* Ocultar scrollbars */
-  scrollbar-width:none; /* Firefox */
-}
-#stories::-webkit-scrollbar{display:none;} /* WebKit */
-
-.story{
-  min-height:100dvh;width:100%;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;
-  text-align:center;scroll-snap-align:start;
-  padding:2rem;background-size:cover;background-position:center;position:relative;
-}
-.story::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0.4);}
-.storyContent{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1rem;}
-.story h2{font-family:"Dancing Script", cursive;font-size:2rem;margin-bottom:.5rem;}
-.story .date{font-size:1rem;opacity:.85;margin-bottom:1rem;}
-.story p{font-size:1.1rem;line-height:1.4;}
-
-/* Pequeños ajustes responsivos */
-@media (min-width:768px){
-  .story h2{font-size:2.4rem;}
-  .story p{font-size:1.2rem;}
+#slideCounter{
+  width:100px;padding:.3rem .6rem;
+  border-radius:20px;border:none;
+  text-align:center;font-size:1rem;
+  -webkit-appearance:none;
 }
 </style>
 </head>
 <body oncontextmenu="return false;">
 
-<!-- Lock -->
 <div id="lockScreen">
   <div class="lockContent">
     <span class="material-symbols-outlined heart">favorite</span>
-    <div id="message" class="show">Ingrese código</div>
+    <div id="message">Ingrese código</div>
     <div id="pinDots"></div>
     <div id="keypad"></div>
   </div>
 </div>
 
-<!-- Topbar Stories -->
-<div id="topbar" style="display:none;">
-  <div class="searchWrap">
-    <span class="material-symbols-outlined icon">search</span>
-    <input id="slideSearch" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Ir a slide # (1…N)"/>
-    <div class="counter"><span id="currentIdx">1</span> / <span id="totalIdx">1</span></div>
+<div id="slidesWrapper">
+  <div id="topbar">
+    <input type="number" id="slideCounter" inputmode="numeric" pattern="[0-9]*">
   </div>
+  <div id="slidesContainer" style="display:flex;flex-direction:column;height:100%;transition:transform .4s ease;"></div>
 </div>
-
-<!-- Stories -->
-<div id="stories" aria-label="Historias de pareja">
-  <!-- Las historias se inyectan desde JSON -->
-</div>
-
-<!-- JSON de recuerdos (puedes moverlo a memories.json luego) -->
-<script id="recuerdosJSON" type="application/json">
-[
-  {
-    "titulo": "Una nueva historia",
-    "fecha": "2025-08-21",
-    "descripcion": "Decididos a iniciar una increíble historia llena de retos, momentos, sentimientos y ganas de tener una casita propia juntos.",
-    "fondo": "momentos/foto1.jpg"
-  },
-  {
-    "titulo": "Momento especial",
-    "fecha": "2025-09-10",
-    "descripcion": "Aquel día que reímos hasta que nos dolió la barriga y prometimos nunca soltarnos.",
-    "fondo": "momentos/foto2.jpg"
-  },
-  {
-    "titulo": "Nuestro sueño",
-    "fecha": "2026-02-14",
-    "descripcion": "Un día de amor, planes de futuro y la ilusión de seguir construyendo juntos.",
-    "fondo": "momentos/foto3.jpg"
-  }
-]
-</script>
 
 <script>
-// ==================== Configuración ====================
-const PASSWORD_HASH = "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d";
-const PIN_LENGTH = 6;
+// --- Configuración ---
+const PASSWORD_HASH="4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d";
+const PIN_LENGTH=6;
 
-// Bloqueos
-let attempts = parseInt(localStorage.getItem("attempts")||"0");
-let blockLevel = parseInt(localStorage.getItem("blockLevel")||"0");
-let blockedUntil = parseInt(localStorage.getItem("blockedUntil")||"0");
-const blockTimes = [15*60*1000, 30*60*1000, 60*60*1000, 24*60*60*1000];
-const maxBlock = 30*24*60*60*1000;
+// --- Dots ---
+const dots=document.getElementById("pinDots");
+for(let i=0;i<PIN_LENGTH;i++){dots.innerHTML+=`<div class="dot"></div>`;}
+const dotEls=[...document.querySelectorAll(".dot")];
+const msg=document.getElementById("message");
 
-// Helpers
+// --- Keypad ---
+const keypad=document.getElementById("keypad");
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function renderKeypad(){
+  keypad.innerHTML="";
+  shuffle([...Array(10).keys()]).forEach(n=>{
+    const k=document.createElement("div");
+    k.className="key";k.textContent=n;
+    k.addEventListener("touchstart",()=>enterDigit(n));
+    k.addEventListener("click",()=>enterDigit(n));
+    keypad.appendChild(k);
+  });
+  const del=document.createElement("div");
+  del.className="key material-symbols-outlined";del.textContent="backspace";
+  del.addEventListener("touchstart",deleteDigit);
+  del.addEventListener("click",deleteDigit);
+  keypad.appendChild(del);
+}
+renderKeypad();
+
+// --- Lógica Lock ---
+let input="";
 async function hashPassword(pwd){
   const enc=new TextEncoder().encode(pwd);
   const buf=await crypto.subtle.digest("SHA-256",enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-const now=()=>Date.now();
-
-// ==================== Elementos ====================
-const dots=document.getElementById("pinDots");
-const msg=document.getElementById("message");
-const keypad=document.getElementById("keypad");
-const lockScreen=document.getElementById("lockScreen");
-const stories=document.getElementById("stories");
-const topbar=document.getElementById("topbar");
-const slideSearch=document.getElementById("slideSearch");
-const currentIdxEl=document.getElementById("currentIdx");
-const totalIdxEl=document.getElementById("totalIdx");
-
-// ==================== Dots PIN ====================
-for(let i=0;i<PIN_LENGTH;i++){
-  const d=document.createElement("div");
-  d.className="dot";
-  dots.appendChild(d);
-}
-const dotEls=[...document.querySelectorAll(".dot")];
-
-// ==================== Keypad ====================
-function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
-function renderKeypad(){
-  keypad.innerHTML="";
-  let nums=shuffle([...Array(10).keys()]);
-  nums.forEach(n=>{
-    const k=document.createElement("div");
-    k.className="key";
-    k.textContent=n;
-    k.onclick=()=>enterDigit(n);
-    keypad.appendChild(k);
-  });
-  // borrar
-  const del=document.createElement("div");
-  del.className="key material-symbols-outlined";
-  del.textContent="backspace";
-  del.title = "Borrar";
-  del.onclick=deleteDigit;
-  keypad.appendChild(del);
-
-  // NOTA: Eliminado el botón "Enter" porque ahora es auto-check al completar PIN.
-}
-renderKeypad();
-
-// ==================== Lógica PIN ====================
-let input="";
 function enterDigit(n){
-  if(isBlocked())return;
-  if(input.length>=PIN_LENGTH) return;
-  input+=String(n);
-  dotEls[input.length-1].classList.add("filled");
-  if(input.length===PIN_LENGTH){
-    // Auto-check inmediatamente al completar
-    checkPassword();
-  }
+  if(input.length>=PIN_LENGTH)return;
+  input+=n;dotEls[input.length-1].classList.add("filled");
+  if(input.length===PIN_LENGTH) checkPassword();
 }
 function deleteDigit(){
   if(input.length>0){
@@ -275,160 +168,73 @@ function deleteDigit(){
     input=input.slice(0,-1);
   }
 }
-function isBlocked(){
-  if(now()<blockedUntil){
-    const left=Math.ceil((blockedUntil-now())/60000);
-    showMessage(`Bloqueado ${left} min`);
-    return true;
-  }
-  return false;
-}
-function showMessage(text,shake=false){
-  msg.classList.remove("show");
-  setTimeout(()=>{
-    msg.textContent=text;
-    msg.classList.add("show");
-    if(shake){
-      msg.classList.add("shake");
-      setTimeout(()=>msg.classList.remove("shake"),400);
-    }
-  },150);
-}
 async function checkPassword(){
-  if(isBlocked())return;
-  if(input.length!==PIN_LENGTH)return;
   const hash=await hashPassword(input);
-  if(hash===PASSWORD_HASH){
-    showMessage("✔ Desbloqueado!");
-    localStorage.removeItem("attempts");
-    localStorage.removeItem("blockLevel");
-    localStorage.removeItem("blockedUntil");
-    // animación desbloqueo
-    lockScreen.style.transform="translateY(-100%)";
-    stories.style.transform="translateY(0)";
-    topbar.style.display="flex";
-    // Bloquear scroll del documento y permitir solo stories
-    document.documentElement.style.overflow="hidden";
-    document.body.style.overflow="hidden";
-    stories.focus({preventScroll:true});
-  }else{
-    attempts++;
-    localStorage.setItem("attempts",attempts);
-    showMessage("Código incorrecto",true);
-    input="";
-    dotEls.forEach(d=>d.classList.remove("filled"));
-    renderKeypad();
-    if(attempts>=4){
-      attempts=0; blockLevel++;
-      let blockTime=blockTimes[blockLevel-1]||maxBlock;
-      blockedUntil=now()+blockTime;
-      localStorage.setItem("attempts",attempts);
-      localStorage.setItem("blockLevel",blockLevel);
-      localStorage.setItem("blockedUntil",blockedUntil);
-      isBlocked();
-    }
+  if(hash===PASSWORD_HASH){unlock();}
+  else{
+    msg.textContent="Código incorrecto";msg.classList.add("shake");
+    setTimeout(()=>msg.classList.remove("shake"),400);
+    input="";dotEls.forEach(d=>d.classList.remove("filled"));renderKeypad();
   }
 }
-
-// ==================== Historias desde JSON ====================
-function formateaFechaES(iso){
-  // Devuelve "21 de agosto del 2025"
-  try{
-    const d=new Date(iso+"T12:00:00"); // evita desfaces TZ
-    const dia = d.getDate();
-    const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-    const mes = meses[d.getMonth()];
-    const anio = d.getFullYear();
-    return `${dia} de ${mes} del ${anio}`;
-  }catch(e){ return iso; }
-}
-function crearStory({titulo,fecha,descripcion,fondo}){
-  const sec=document.createElement("section");
-  sec.className="story";
-  sec.style.backgroundImage=`url('${fondo}')`;
-  sec.innerHTML = `
-    <div class="storyContent">
-      <h2>${titulo}</h2>
-      <div class="date">${formateaFechaES(fecha)}</div>
-      <p>${descripcion}</p>
-    </div>
-  `;
-  return sec;
-}
-let historias = [];
-(function montarHistorias(){
-  const raw = document.getElementById("recuerdosJSON").textContent.trim();
-  try{
-    historias = JSON.parse(raw);
-  }catch(e){
-    historias = [];
-    console.error("JSON inválido en #recuerdosJSON", e);
-  }
-  stories.innerHTML="";
-  historias.forEach(item => stories.appendChild(crearStory(item)));
-  totalIdxEl.textContent = String(historias.length || 1);
-})();
-
-// ==================== Navegación / Contador en tiempo real ====================
-let currentIndex = 1;
-function irASlide(n){
-  if(!historias.length) return;
-  const max = historias.length;
-  let idx = Math.max(1, Math.min(max, n|0));
-  const nodo = stories.children[idx-1];
-  if(nodo) nodo.scrollIntoView({behavior:"smooth", block:"start"});
+function unlock(){
+  document.getElementById("lockScreen").style.display="none";
+  document.getElementById("slidesWrapper").style.display="block";
+  initSlides();
 }
 
-slideSearch.addEventListener("change", ()=>{
-  const val = parseInt(slideSearch.value,10);
-  if(!isNaN(val)) irASlide(val);
-});
-slideSearch.addEventListener("keydown", (e)=>{
-  if(e.key==="Enter"){
-    const val = parseInt(slideSearch.value,10);
-    if(!isNaN(val)) irASlide(val);
-  }
-});
+// --- Slides JSON ---
+const slidesData=[
+  {title:"Una nueva historia",date:"21 de agosto del 2025",desc:"Decididos a iniciar una increíble historia llena de retos, momentos y sentimientos."},
+  {title:"Momento especial",date:"22 de agosto del 2025",desc:"Un día para recordar juntos y sonreír."},
+  {title:"Nuestro futuro",date:"23 de agosto del 2025",desc:"Soñando con la casita propia, construyendo nuestro hogar."}
+];
 
-// Detectar slide actual (IntersectionObserver)
-const obs = new IntersectionObserver((entries)=>{
-  entries.forEach(ent=>{
-    if(ent.isIntersecting){
-      const idx = [...stories.children].indexOf(ent.target) + 1;
-      if(idx>0){
-        currentIndex = idx;
-        currentIdxEl.textContent = String(currentIndex);
-      }
-    }
+let currentIndex=0;
+const slidesContainer=document.getElementById("slidesContainer");
+function initSlides(){
+  slidesData.forEach(s=>{
+    const el=document.createElement("div");
+    el.className="slide";
+    el.innerHTML=`<h2>${s.title}</h2><small>${s.date}</small><p>${s.desc}</p>`;
+    slidesContainer.appendChild(el);
   });
-},{root:stories, threshold:0.6});
-[...stories.children].forEach(sec=>obs.observe(sec));
-
-// ==================== Antizoom (JS) ====================
-// Evita pinch-zoom
-document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('gesturechange', e => e.preventDefault());
-document.addEventListener('gestureend', e => e.preventDefault());
-
-// Evita double-tap zoom
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function(e){
-  const now = Date.now();
-  if(now - lastTouchEnd <= 300){ e.preventDefault(); }
-  lastTouchEnd = now;
-}, {passive:false});
-
-// Evita zoom con Ctrl (por si se abre en desktop)
-document.addEventListener('wheel', e=>{
-  if(e.ctrlKey){ e.preventDefault(); }
-}, {passive:false});
-
-// ==================== PWA Service Worker ====================
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js')
-    .then(reg => console.log("SW registrado", reg))
-    .catch(err => console.error("Error registrando SW", err));
+  updateCounter();
 }
+
+// --- Navegación touch con loop ---
+let startY=0;
+slidesContainer.addEventListener("touchstart",e=>startY=e.touches[0].clientY);
+slidesContainer.addEventListener("touchend",e=>{
+  let diff=startY-e.changedTouches[0].clientY;
+  if(Math.abs(diff)>40){
+    if(diff>0) nextSlide(); else prevSlide();
+  }
+});
+function nextSlide(){
+  currentIndex=(currentIndex+1)%slidesData.length;
+  updateTransform();
+}
+function prevSlide(){
+  currentIndex=(currentIndex-1+slidesData.length)%slidesData.length;
+  updateTransform();
+}
+function updateTransform(){
+  slidesContainer.style.transform=`translateY(${-currentIndex*100}%)`;
+  updateCounter();
+}
+function updateCounter(){
+  document.getElementById("slideCounter").value=currentIndex+1;
+}
+
+// --- Buscar slide por número ---
+document.getElementById("slideCounter").addEventListener("change",e=>{
+  let val=parseInt(e.target.value)-1;
+  if(val>=0 && val<slidesData.length){currentIndex=val;updateTransform();}
+});
+
+// --- SW ---
+if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
 </html>
