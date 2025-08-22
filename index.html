@@ -3,246 +3,156 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lock Numérico</title>
+<title>PWA Lock + Slides</title>
 
-<!-- status bar iOS/Android -->
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
 <style>
 :root {
-  --primary: #ffa0e5;
-  --text: #ffffff;
+  --text: #fff;
 }
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;}
+html,body{height:100%;background:#000;color:var(--text);overflow:hidden;font-family:sans-serif}
 
-/* --- Global --- */
-*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
-html,body{
-  width:100%;height:100dvh;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  color:var(--text);
-  overflow:hidden;
-  background:#000;
-}
-
-/* --- Fondo full con overlay oscuro --- */
+/* --- LockScreen --- */
 #lockScreen{
   position:fixed;inset:0;
   display:flex;flex-direction:column;
   justify-content:center;align-items:center;
-  background:url("momentos/foto2.JPG") no-repeat center/cover;
+  background:url("momentos/foto2.JPG") center/cover no-repeat;
 }
 #lockScreen::after{
-  content:"";
-  position:absolute;inset:0;
-  background:rgba(0,0,0,0.35);
-  pointer-events:none;
+  content:"";position:absolute;inset:0;background:rgba(0,0,0,.35);
 }
+.lockContent{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;}
 
-/* --- Contenido --- */
-.lockContent{
-  position:relative;
-  display:flex;flex-direction:column;
-  align-items:center;
-  z-index:1;
-  width:100%;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom);
-}
+/* --- PIN --- */
+#pinDots{display:flex;gap:.5rem;margin:1rem;}
+.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid #fff;background:transparent}
+.dot.filled{background:#fff}
+#message{margin-top:1rem;height:1.5rem}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 
-/* --- Corazón animado --- */
-.heart{
-  font-size:3rem;
-  margin-bottom:1rem;
-  animation:heartbeat 1.8s infinite;
-}
-@keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
+/* keypad */
+#keypad{display:grid;grid-template-columns:repeat(3,70px);gap:1rem;justify-content:center}
+.key{width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;cursor:pointer}
+.key:active{transform:scale(.9)}
 
-/* --- Indicador PIN --- */
-#pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
-.dot{
-  width:.9rem;height:.9rem;border-radius:50%;
-  border:2px solid var(--text);
-  background:transparent;
-  transition:.2s;
+/* --- Slides estilo TikTok --- */
+#slides{
+  position:fixed;inset:0;
+  overflow:hidden;
+  display:none; /* oculto hasta desbloquear */
 }
-.dot.filled{background:var(--text);}
-
-/* --- Mensaje --- */
-#message{
-  font-size:1.1rem;
-  margin-bottom:1rem;
-  min-height:1.5rem;
-  transition:.3s;
-}
-.shake{animation:shake .4s;}
-@keyframes shake{
-  0%,100%{transform:translateX(0);}
-  20%,60%{transform:translateX(-8px);}
-  40%,80%{transform:translateX(8px);}
-}
-
-/* --- Keypad --- */
-#keypad{
-  display:grid;
-  grid-template-columns:repeat(3,70px);
-  gap:1rem;
-  justify-content:center;
-}
-.key{
-  width:70px;height:70px;
-  border-radius:50%;
-  background:rgba(0,0,0,0.4);
-  color:var(--text);
+.slide{
+  width:100%;height:100%;
   display:flex;align-items:center;justify-content:center;
-  font-size:2rem;
-  cursor:pointer;
-  backdrop-filter:blur(6px);
-  transition:.2s;
+  font-size:2rem;font-weight:bold;
+  background-size:cover;
+  background-position:center;
 }
-.key:active{transform:scale(0.9);}
-.material-symbols-outlined{font-size:2rem;}
 </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="lockScreen">
   <div class="lockContent">
-    <span class="material-symbols-outlined heart">favorite</span>
+    <span class="material-symbols-outlined" style="font-size:3rem;">favorite</span>
     <div id="message">Ingrese código</div>
     <div id="pinDots"></div>
     <div id="keypad"></div>
   </div>
 </div>
 
+<div id="slides">
+  <div class="slide" style="background-image:url('momentos/foto1.jpg')"></div>
+  <div class="slide" style="background-image:url('momemtos/foto3.jpg')"></div>
+  <div class="slide" style="background-image:url('momentos/slide3.jpg')"></div>
+</div>
+
 <script>
-// --- Configuración ---
-const PASSWORD_HASH = "coloca_aqui_tu_hash_SHA256"; 
+// --- PIN Lock ---
+const PASSWORD_HASH = "coloca_aqui_tu_hash_SHA256";
 const PIN_LENGTH = 4;
+const dots=document.getElementById("pinDots");
+const msg=document.getElementById("message");
+for(let i=0;i<PIN_LENGTH;i++){let d=document.createElement("div");d.className="dot";dots.appendChild(d);}
+const dotEls=[...document.querySelectorAll(".dot")];
+let input="";
 
-// --- Bloqueos ---
-let attempts = parseInt(localStorage.getItem("attempts")||"0");
-let blockLevel = parseInt(localStorage.getItem("blockLevel")||"0");
-let blockedUntil = parseInt(localStorage.getItem("blockedUntil")||"0");
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function renderKeypad(){
+  const keypad=document.getElementById("keypad"); keypad.innerHTML="";
+  let nums=shuffle([...Array(10).keys()]);
+  nums.forEach(n=>{
+    const k=document.createElement("div");
+    k.className="key"; k.textContent=n;
+    k.onclick=()=>enterDigit(n);
+    keypad.appendChild(k);
+  });
+  const del=document.createElement("div");
+  del.className="key material-symbols-outlined"; del.textContent="backspace";
+  del.onclick=deleteDigit; keypad.appendChild(del);
+}
+renderKeypad();
 
-// Escalas de bloqueo en ms
-const blockTimes = [
-  15*60*1000,     // 15 min
-  30*60*1000,     // 30 min
-  60*60*1000,     // 1 hora
-  24*60*60*1000,  // 1 día
-];
-const maxBlock = 30*24*60*60*1000; // 30 días
-
-// --- Helpers ---
+function enterDigit(n){
+  if(input.length>=PIN_LENGTH)return;
+  input+=n;
+  dotEls[input.length-1].classList.add("filled");
+  if(input.length===PIN_LENGTH) checkPassword();
+}
+function deleteDigit(){
+  if(input.length>0){dotEls[input.length-1].classList.remove("filled");input=input.slice(0,-1);}
+}
 async function hashPassword(pwd){
   const enc=new TextEncoder().encode(pwd);
   const buf=await crypto.subtle.digest("SHA-256",enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-function now(){return Date.now();}
-
-// --- Dots ---
-const dots=document.getElementById("pinDots");
-for(let i=0;i<PIN_LENGTH;i++){
-  const d=document.createElement("div");
-  d.className="dot";
-  dots.appendChild(d);
-}
-const dotEls=[...document.querySelectorAll(".dot")];
-const msg=document.getElementById("message");
-
-// --- Keypad ---
-const keypad=document.getElementById("keypad");
-function shuffle(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
-  }
-  return arr;
-}
-function renderKeypad(){
-  keypad.innerHTML="";
-  let nums=shuffle([...Array(10).keys()]);
-  nums.forEach(n=>{
-    const k=document.createElement("div");
-    k.className="key";
-    k.textContent=n;
-    k.onclick=()=>enterDigit(n);
-    keypad.appendChild(k);
-  });
-  // borrar
-  const del=document.createElement("div");
-  del.className="key material-symbols-outlined";
-  del.textContent="backspace";
-  del.onclick=deleteDigit;
-  keypad.appendChild(del);
-  // enter
-  const ok=document.createElement("div");
-  ok.className="key material-symbols-outlined";
-  ok.textContent="check_circle";
-  ok.onclick=checkPassword;
-  keypad.appendChild(ok);
-}
-renderKeypad();
-
-// --- Lógica ---
-let input="";
-function enterDigit(n){
-  if(isBlocked())return;
-  if(input.length>=PIN_LENGTH)return;
-  input+=n;
-  dotEls[input.length-1].classList.add("filled");
-}
-function deleteDigit(){
-  if(input.length>0){
-    dotEls[input.length-1].classList.remove("filled");
-    input=input.slice(0,-1);
-  }
-}
-function isBlocked(){
-  if(now()<blockedUntil){
-    const left=Math.ceil((blockedUntil-now())/1000/60);
-    msg.textContent=`Bloqueado ${left} min`;
-    return true;
-  }
-  return false;
-}
 async function checkPassword(){
-  if(isBlocked())return;
-  if(input.length!==PIN_LENGTH)return;
   const hash=await hashPassword(input);
   if(hash===PASSWORD_HASH){
     msg.textContent="✔ Desbloqueado!";
-    localStorage.removeItem("attempts");
-    localStorage.removeItem("blockLevel");
-    localStorage.removeItem("blockedUntil");
-    alert("Acceso permitido!");
+    document.getElementById("lockScreen").style.display="none";
+    document.getElementById("slides").style.display="block";
+    initSlides();
   }else{
-    attempts++;
-    localStorage.setItem("attempts",attempts);
-    msg.textContent="Código incorrecto";
-    msg.classList.add("shake");
+    msg.textContent="Código incorrecto"; msg.classList.add("shake");
     setTimeout(()=>msg.classList.remove("shake"),400);
-    input="";
-    dotEls.forEach(d=>d.classList.remove("filled"));
+    input=""; dotEls.forEach(d=>d.classList.remove("filled"));
     renderKeypad();
-
-    if(attempts>=4){
-      attempts=0;
-      blockLevel++;
-      let blockTime=blockTimes[blockLevel-1]||maxBlock;
-      blockedUntil=now()+blockTime;
-      localStorage.setItem("attempts",attempts);
-      localStorage.setItem("blockLevel",blockLevel);
-      localStorage.setItem("blockedUntil",blockedUntil);
-      isBlocked();
-    }
   }
+}
+
+// --- Slides estilo TikTok ---
+function initSlides(){
+  const slides=document.querySelectorAll(".slide");
+  let index=0,startY=0,current=0;
+  function showSlide(i){
+    slides.forEach((s,idx)=>s.style.transform=`translateY(${(idx-i)*100}%)`);
+  }
+  showSlide(index);
+  document.getElementById("slides").addEventListener("touchstart",e=>startY=e.touches[0].clientY);
+  document.getElementById("slides").addEventListener("touchend",e=>{
+    let endY=e.changedTouches[0].clientY;
+    if(endY-startY>50 && index>0) index--;
+    else if(startY-endY>50 && index<slides.length-1) index++;
+    showSlide(index);
+  });
+}
+</script>
+
+<script>
+// Registrar service worker
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("service-worker.js");
 }
 </script>
 </body>
