@@ -29,7 +29,7 @@ html,body{
   background:#000;
 }
 
-/* --- Fondo estilo TikTok (imagen full con overlay oscuro) --- */
+/* --- Fondo full con overlay oscuro --- */
 #lockScreen{
   position:fixed;inset:0;
   display:flex;flex-direction:column;
@@ -39,18 +39,18 @@ html,body{
 #lockScreen::after{
   content:"";
   position:absolute;inset:0;
-  background:rgba(0,0,0,0.35); /* oscurece imagen */
+  background:rgba(0,0,0,0.35);
   pointer-events:none;
 }
 
-/* --- Contenido sobre el fondo --- */
+/* --- Contenido --- */
 .lockContent{
   position:relative;
   display:flex;flex-direction:column;
   align-items:center;
   z-index:1;
   width:100%;
-  padding-top:env(safe-area-inset-top); /* statusbar iOS */
+  padding-top:env(safe-area-inset-top);
   padding-bottom:env(safe-area-inset-bottom);
 }
 
@@ -63,9 +63,7 @@ html,body{
 @keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
 
 /* --- Indicador PIN --- */
-#pinDots{
-  display:flex;gap:.5rem;margin-bottom:1rem;
-}
+#pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
 .dot{
   width:.9rem;height:.9rem;border-radius:50%;
   border:2px solid var(--text);
@@ -73,6 +71,20 @@ html,body{
   transition:.2s;
 }
 .dot.filled{background:var(--text);}
+
+/* --- Mensaje --- */
+#message{
+  font-size:1.1rem;
+  margin-bottom:1rem;
+  min-height:1.5rem;
+  transition:.3s;
+}
+.shake{animation:shake .4s;}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%,60%{transform:translateX(-8px);}
+  40%,80%{transform:translateX(8px);}
+}
 
 /* --- Keypad --- */
 #keypad{
@@ -101,16 +113,30 @@ html,body{
 <div id="lockScreen">
   <div class="lockContent">
     <span class="material-symbols-outlined heart">favorite</span>
+    <div id="message">Ingrese código</div>
     <div id="pinDots"></div>
     <div id="keypad"></div>
-    <div id="errorText" style="margin-top:1rem;color:#ff8585;display:none;">Código incorrecto</div>
   </div>
 </div>
 
 <script>
 // --- Configuración ---
-const PASSWORD_HASH = "coloca_aqui_tu_hash_SHA256"; // tu hash
+const PASSWORD_HASH = "coloca_aqui_tu_hash_SHA256"; 
 const PIN_LENGTH = 4;
+
+// --- Bloqueos ---
+let attempts = parseInt(localStorage.getItem("attempts")||"0");
+let blockLevel = parseInt(localStorage.getItem("blockLevel")||"0");
+let blockedUntil = parseInt(localStorage.getItem("blockedUntil")||"0");
+
+// Escalas de bloqueo en ms
+const blockTimes = [
+  15*60*1000,     // 15 min
+  30*60*1000,     // 30 min
+  60*60*1000,     // 1 hora
+  24*60*60*1000,  // 1 día
+];
+const maxBlock = 30*24*60*60*1000; // 30 días
 
 // --- Helpers ---
 async function hashPassword(pwd){
@@ -118,6 +144,7 @@ async function hashPassword(pwd){
   const buf=await crypto.subtle.digest("SHA-256",enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
+function now(){return Date.now();}
 
 // --- Dots ---
 const dots=document.getElementById("pinDots");
@@ -127,6 +154,7 @@ for(let i=0;i<PIN_LENGTH;i++){
   dots.appendChild(d);
 }
 const dotEls=[...document.querySelectorAll(".dot")];
+const msg=document.getElementById("message");
 
 // --- Keypad ---
 const keypad=document.getElementById("keypad");
@@ -165,6 +193,7 @@ renderKeypad();
 // --- Lógica ---
 let input="";
 function enterDigit(n){
+  if(isBlocked())return;
   if(input.length>=PIN_LENGTH)return;
   input+=n;
   dotEls[input.length-1].classList.add("filled");
@@ -175,17 +204,44 @@ function deleteDigit(){
     input=input.slice(0,-1);
   }
 }
+function isBlocked(){
+  if(now()<blockedUntil){
+    const left=Math.ceil((blockedUntil-now())/1000/60);
+    msg.textContent=`Bloqueado ${left} min`;
+    return true;
+  }
+  return false;
+}
 async function checkPassword(){
+  if(isBlocked())return;
   if(input.length!==PIN_LENGTH)return;
   const hash=await hashPassword(input);
   if(hash===PASSWORD_HASH){
-    document.getElementById("errorText").style.display="none";
-    alert("✔ Desbloqueado!");
+    msg.textContent="✔ Desbloqueado!";
+    localStorage.removeItem("attempts");
+    localStorage.removeItem("blockLevel");
+    localStorage.removeItem("blockedUntil");
+    alert("Acceso permitido!");
   }else{
-    document.getElementById("errorText").style.display="block";
+    attempts++;
+    localStorage.setItem("attempts",attempts);
+    msg.textContent="Código incorrecto";
+    msg.classList.add("shake");
+    setTimeout(()=>msg.classList.remove("shake"),400);
     input="";
     dotEls.forEach(d=>d.classList.remove("filled"));
     renderKeypad();
+
+    if(attempts>=4){
+      attempts=0;
+      blockLevel++;
+      let blockTime=blockTimes[blockLevel-1]||maxBlock;
+      blockedUntil=now()+blockTime;
+      localStorage.setItem("attempts",attempts);
+      localStorage.setItem("blockLevel",blockLevel);
+      localStorage.setItem("blockedUntil",blockedUntil);
+      isBlocked();
+    }
   }
 }
 </script>
