@@ -1,140 +1,196 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1.0,user-scalable=no" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>SYA</title>
 
-<!-- PWA -->
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#000" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<!-- ==========================
+     PWA CONFIG
+     ========================== -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- Fuentes / Icons -->
+<!-- ==========================
+     FUENTES / ICONOS
+     ========================== -->
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
 <style>
-/* ===========================
-   VARIABLES & RESET
-   =========================== */
 :root{
+  /* Colores base */
   --primary:#ffa0e5;
   --text:#fff;
-  --glass:rgba(0,0,0,.38);
+  --glass:rgba(0,0,0,.4);
 
-  /* Notif colors */
-  --notif-bg:#ff3b30;
+  /* Paleta de notificación (badge + sombras) */
+  --notif-bg:#ff3b30; /* rojo iOS */
   --notif-shadow:rgba(255,59,48,0.45);
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
-html,body{height:100dvh;min-height:100vh;background:#000;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;}
-.material-symbols-outlined{font-variation-settings: 'FILL' 0, 'wght' 400; font-size:20px;}
 
-/* ===========================
+/* -------------------------
+   GLOBAL / RESET
+   ------------------------- */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+html,body{
+  width:100%;height:100dvh;min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);overflow:hidden;background:#000;
+  -webkit-text-size-adjust:100%;
+}
+.material-symbols-outlined{font-size:2rem;}
+
+/* -------------------------
    LOCKSCREEN
-   =========================== */
+   ------------------------- */
 #lockScreen{
-  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-  background:url("momentos/foto0.JPG") center/cover no-repeat;
+  position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:url("momentos/foto0.JPG") no-repeat center/cover;
   transition:transform .7s ease-in-out;z-index:30;
 }
 #lockScreen::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.35);pointer-events:none;}
-.lockContent{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);width:100%;}
-.heart{position:relative;font-size:3rem;margin-bottom:6px;animation:heartbeat 1.8s infinite;}
+.lockContent{
+  position:relative;display:flex;flex-direction:column;align-items:center;z-index:1;width:100%;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* Corazón + badge pegado */
+.heart{
+  position:relative;
+  font-size:3rem;margin-bottom:1rem;animation:heartbeat 1.8s infinite;
+}
 @keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
 
-/* Badge pegado al corazón */
+/* Burbuja de nuevos al lado del corazón */
 #newBadge{
-  position:absolute;top:-8px;right:-8px;background:var(--notif-bg);color:#fff;font-size:.78rem;font-weight:700;
-  border-radius:999px;padding:.14rem .45rem;display:none;opacity:0;transform:scale(.5);
-  transition:transform .36s cubic-bezier(.2,.9,.3,1),opacity .36s;pointer-events:none;
+  position:absolute;top:-8px;right:-8px;
+  background:var(--notif-bg);color:#fff;font-size:.78rem;font-weight:700;
+  border-radius:999px;padding:.15rem .45rem;display:none;opacity:0;transform:scale(.5);
+  transition:transform .36s cubic-bezier(.2,.9,.3,1), opacity .36s;
+  pointer-events:none;
 }
 #newBadge.show{display:inline-block;opacity:1;transform:scale(1);}
 
-/* Message + shake */
-#message{font-size:1.05rem;min-height:1.4rem;opacity:0;transition:opacity .25s;}
+/* Mensaje + dots + keypad */
+#message{font-size:1.05rem;margin-bottom:1rem;min-height:1.4rem;opacity:0;transition:opacity .3s;}
 #message.show{opacity:1;}
-@keyframes shakeAnim{
-  10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(4px);}
-  30%,50%,70%{transform:translateX(-6px);}40%,60%{transform:translateX(6px);}
-}
-#message.shake{animation:shakeAnim .5s linear;}
-
-/* PIN dots / keypad */
-#pinDots{display:flex;gap:.5rem;}
-.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid var(--text);background:transparent;transition:all .12s;}
+#pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
+.dot{width:.9rem;height:.9rem;border-radius:50%;border:2px solid var(--text);background:transparent;transition:.18s;}
 .dot.filled{background:var(--text);}
-#keypad{display:grid;grid-template-columns:repeat(3,min(20vw,68px));gap:10px;justify-content:center;padding:6px;}
-.key{width:min(20vw,68px);height:min(20vw,68px);border-radius:50%;background:var(--glass);display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;color:var(--text);user-select:none;}
+#keypad{
+  display:grid;grid-template-columns:repeat(3,min(20vw,70px));gap:1rem;justify-content:center;
+}
+.key{
+  width:min(20vw,70px);height:min(20vw,70px);border-radius:50%;
+  background:var(--glass);color:var(--text);display:flex;align-items:center;justify-content:center;
+  font-size:2rem;cursor:pointer;backdrop-filter:blur(6px);transition:transform .12s;
+  position:relative;overflow:hidden;touch-action:manipulation;
+}
+.key:active{transform:scale(.94);}
 
-/* ===========================
-   TOPBAR (stories controls)
-   =========================== */
-#topbar{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0);z-index:28;display:none;justify-content:center;padding:.6rem 1rem;}
-.searchWrap{width:100%;max-width:720px;background:var(--glass);backdrop-filter:blur(6px);border-radius:999px;padding:.35rem .75rem;display:flex;align-items:center;gap:.6rem;}
-.searchWrap .icon{font-size:20px;opacity:.9;}
-#slideSearch{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:1rem;}
-.counter{opacity:.9;min-width:48px;text-align:center;}
-#refreshBtn{width:36px;height:36px;border-radius:50%;background:var(--glass);border:none;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;}
-#refreshBtn.refreshing{transform:rotate(360deg);transition:transform .6s linear;}
+/* -------------------------
+   TOPBAR (tras desbloquear)
+   ------------------------- */
+#topbar{
+  position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:25;
+  display:none;justify-content:center;padding:.6rem 1rem;
+}
+.searchWrap{
+  flex:1;max-width:700px;display:flex;align-items:center;gap:.5rem;
+  background:var(--glass);backdrop-filter:blur(6px);border-radius:999px;padding:.35rem .75rem;position:relative;
+}
+.searchWrap .icon{font-size:1.35rem;opacity:.9;}
+#slideSearch{flex:1;border:none;outline:none;background:transparent;color:var(--text);font-size:1rem;padding:.35rem 0;}
+.counter{font-variant-numeric:tabular-nums;opacity:.9;white-space:nowrap;}
+#refreshBtn{
+  background:var(--glass);border:none;border-radius:50%;width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:.5rem;color:var(--text);
+  transition:transform .22s,opacity .22s;
+}
+#refreshBtn:active{transform:scale(.94);}
+#refreshBtn.refreshing{transform:rotate(360deg) scale(1.03);transition:transform .6s ease-in-out;}
 
-/* ===========================
-   STORIES / TRACK
-   =========================== */
-#stories{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;transform:translateY(100%);transition:transform .6s cubic-bezier(.2,.9,.3,1);}
-#track{width:100%;height:100%;will-change:transform;touch-action:none;transform:translate3d(0,0,0);}
-.story{position:relative;height:100dvh;width:100%;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;}
-.story::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0000004d,#000000e6);pointer-events:none;transition:background .28s, box-shadow .28s;}
-.storyContent{position:relative;z-index:2;max-width:900px;padding:1rem;color:var(--text);text-shadow:0 2px 10px rgba(0,0,0,.4);}
-.story h2{font-family:"Dancing Script",cursive;font-size:2rem;margin-bottom:.4rem;}
-.story .date{opacity:.9;margin-bottom:.7rem;}
-.story p{line-height:1.45;font-size:1.02rem;}
+/* -------------------------
+   STORIES
+   ------------------------- */
+#stories{
+  position:fixed;inset:0;background:#000;overflow:hidden;
+  transform:translateY(100%);transition:transform .7s ease-in-out;z-index:20;
+}
+#track{
+  width:100%;height:100%;
+  will-change:transform; /* ♻️ optimización GPU */
+  touch-action:none;display:block;
+  transform:translate3d(0,0,0);
+}
+.story{
+  height:100dvh;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+  position:relative;padding:2rem;background-size:cover;background-position:center;will-change:transform;
+}
+.story::after{
+  content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0000004d,#000000e6);
+  pointer-events:none;transition:background .28s;
+}
+.storyContent{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1rem;}
+.story h2{font-family:"Dancing Script",cursive;font-size:2rem;margin-bottom:.5rem;}
+.story .date{font-size:1rem;opacity:.85;margin-bottom:1rem;}
+.story p{font-size:1.06rem;line-height:1.45;}
+@media(min-width:768px){.story h2{font-size:2.4rem}.story p{font-size:1.15rem}}
 
-/* Video / img fill */
-.story img, .story video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
-
-/* audio button for videos */
-.audioBtn{position:absolute;right:14px;bottom:14px;z-index:3;background:var(--glass);border-radius:50%;padding:.38rem;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);}
-
-/* visual when story is new */
+/* 🎯 Marca visual de NUEVA historia (1ª vista mantiene, 2ª vista se elimina) */
 .story.newItem::after{
   background:linear-gradient(to bottom, rgba(255,59,48,0.32), rgba(0,0,0,0.92));
   box-shadow: inset 0 0 40px var(--notif-shadow);
 }
 
-/* small refresh feedback */
-.track-refreshing{filter:brightness(.98) saturate(.98);transition:filter .32s;}
+/* Feedback visual al refrescar */
+.track-refreshing {
+  filter: brightness(.98) saturate(.98);
+  transition: filter .35s ease;
+}
 </style>
 </head>
 <body oncontextmenu="return false;">
 
-<!-- LOCKSCREEN -->
+<!-- -------------------------
+     LOCKSCREEN
+     ------------------------- -->
 <div id="lockScreen">
   <div class="lockContent">
+    <!-- ❤️ Corazón con badge pegado arriba-derecha -->
     <span class="material-symbols-outlined heart">
       favorite
-      <span id="newBadge" aria-hidden="true"></span> <!-- badge pegado al corazón -->
+      <span id="newBadge" aria-hidden="true"></span>
     </span>
+
     <div id="message" class="show">Ingrese código</div>
     <div id="pinDots"></div>
     <div id="keypad"></div>
   </div>
 </div>
 
-<!-- TOPBAR (aparece al desbloquear) -->
+<!-- -------------------------
+     TOPBAR (tras desbloquear)
+     ------------------------- -->
 <div id="topbar">
   <div class="searchWrap">
     <span class="material-symbols-outlined icon">search</span>
-    <input id="slideSearch" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar recuerdo..." />
-    <div class="counter"><span id="currentIdx">1</span> / <span id="totalIdx">1</span></div>
+    <input id="slideSearch" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar recuerdo..."/>
+    <div class="counter">
+      <span id="currentIdx">1</span> / <span id="totalIdx">1</span>
+    </div>
+    <!-- Aquí va REFRESH (en el lugar donde antes estaba el badge) -->
     <button id="refreshBtn" class="material-symbols-outlined" title="Refrescar">refresh</button>
   </div>
 </div>
 
-<!-- STORIES -->
-<div id="stories" aria-label="Historias">
+<!-- -------------------------
+     STORIES
+     ------------------------- -->
+<div id="stories" aria-label="Historias de pareja">
   <div id="track" role="list"></div>
 </div>
 
@@ -142,29 +198,31 @@ html,body{height:100dvh;min-height:100vh;background:#000;color:var(--text);font-
 /* ===========================
    CONFIG / STATE
    =========================== */
-const PASSWORD_HASH = "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d"; // SHA256 PIN
+const PASSWORD_HASH = "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d"; // hash SHA-256 del PIN correcto
 const PIN_LENGTH = 6;
-const RECUERDOS_JSON = "recuerdos.json";
+const RECUERDOS_JSON = "recuerdos.json"; // ruta del JSON con historias
 
 let recuerdos = [], N = 0;
 let pageH = 0;
-/* pos: indices dentro de track children:
-   0 = clone last, 1..N = reales, N+1 = clone first */
+/* pos es el índice dentro del track con clones:
+   0 = clone del último, 1..N = reales, N+1 = clone del primero */
 let pos = 1;
 
 let dragging = false, animating = false;
 let startY = 0, baseY = 0;
-let lastMoveTime = 0, lastMoveY = 0, velocity = 0;
-let builtOnce = false;
-let lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0");
+let rafId = 0, latestDelta = 0;  // loop de arrastre para suavidad
+let velocity = 0, lastMoveTime = 0, lastMoveY = 0;
+
+let lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0"); // historias que ya existían
+let builtOnce = false; // para no sobre-registrar listeners
 
 /* ===========================
-   ELEMENTS
+   ELEMENTOS
    =========================== */
 const lockScreen = document.getElementById("lockScreen");
-const msg = document.getElementById("message");
 const dotsWrap = document.getElementById("pinDots");
 const keypad = document.getElementById("keypad");
+const msg = document.getElementById("message");
 const topbar = document.getElementById("topbar");
 const track = document.getElementById("track");
 const stories = document.getElementById("stories");
@@ -175,7 +233,7 @@ const newBadge = document.getElementById("newBadge");
 const refreshBtn = document.getElementById("refreshBtn");
 
 /* ===========================
-   PIN dots rendering
+   DOTS PARA PIN
    =========================== */
 const dotEls = [];
 for(let i=0;i<PIN_LENGTH;i++){
@@ -186,73 +244,62 @@ for(let i=0;i<PIN_LENGTH;i++){
 }
 
 /* ===========================
-   UTILS: fecha, mensaje, hash
+   MENSAJE + FECHA
    =========================== */
-function formateaFechaES(iso){
-  try{
-    const d = new Date(iso + "T12:00:00");
-    const mes = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-    return `${d.getDate()} de ${mes[d.getMonth()]} del ${d.getFullYear()}`;
-  }catch(e){ return iso; }
-}
-
 function showMessage(text, shake=false){
   msg.classList.remove("show");
   setTimeout(()=>{
     msg.textContent = text;
     msg.classList.add("show");
-    if(shake){
-      msg.classList.add("shake");
-      setTimeout(()=> msg.classList.remove("shake"), 500);
-    }
-  }, 120);
+    if(shake){ msg.classList.add("shake"); setTimeout(()=>msg.classList.remove("shake"),420); }
+  },120);
+}
+function formateaFechaES(iso){
+  try{
+    const d = new Date(iso + "T12:00:00");
+    const m = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    return `${d.getDate()} de ${m[d.getMonth()]} del ${d.getFullYear()}`;
+  }catch(_){ return iso; }
 }
 
+/* ===========================
+   KEYPAD Y PIN
+   =========================== */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function attachKey(el,onPress){
+  const down=e=>{ e.preventDefault(); el.classList.add("active"); onPress(); };
+  const up=()=> el.classList.remove("active");
+  el.addEventListener("pointerdown",down,{passive:false});
+  el.addEventListener("pointerup",up);
+  el.addEventListener("pointercancel",up);
+  el.addEventListener("pointerleave",up);
+}
+function renderKeypad(){
+  keypad.innerHTML = "";
+  shuffle([...Array(10).keys()]).forEach(n=>{
+    const k=document.createElement("div"); k.className="key"; k.textContent=n;
+    attachKey(k,()=>enterDigit(n));
+    keypad.appendChild(k);
+  });
+  const del=document.createElement("div"); del.className="key material-symbols-outlined"; del.textContent="backspace";
+  attachKey(del, deleteDigit); keypad.appendChild(del);
+}
+renderKeypad();
+
+let input="";
 async function hashPassword(pwd){
   const enc = new TextEncoder().encode(pwd);
   const buf = await crypto.subtle.digest("SHA-256", enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-
-/* ===========================
-   KEYPAD (render + logic)
-   =========================== */
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function attachKey(el, onPress){
-  const down = e => { e.preventDefault(); el.classList.add("active"); onPress(); };
-  const up = () => el.classList.remove("active");
-  el.addEventListener("pointerdown", down, {passive:false});
-  el.addEventListener("pointerup", up);
-  el.addEventListener("pointercancel", up);
-  el.addEventListener("pointerleave", up);
-}
-function renderKeypad(){
-  keypad.innerHTML = "";
-  const nums = shuffle([...Array(10).keys()]);
-  nums.forEach(n=>{
-    const k = document.createElement("div");
-    k.className = "key";
-    k.textContent = n;
-    attachKey(k, ()=> enterDigit(String(n)));
-    keypad.appendChild(k);
-  });
-  const del = document.createElement("div");
-  del.className = "key material-symbols-outlined";
-  del.textContent = "backspace";
-  attachKey(del, deleteDigit);
-  keypad.appendChild(del);
-}
-renderKeypad();
-
-let input = "";
 function enterDigit(n){
-  if(input.length >= PIN_LENGTH) return;
-  input += n;
+  if(input.length>=PIN_LENGTH) return;
+  input += String(n);
   dotEls[input.length-1].classList.add("filled");
-  if(input.length === PIN_LENGTH) checkPassword();
+  if(input.length===PIN_LENGTH) checkPassword();
 }
 function deleteDigit(){
-  if(input.length > 0){
+  if(input.length>0){
     dotEls[input.length-1].classList.remove("filled");
     input = input.slice(0,-1);
   }
@@ -264,335 +311,234 @@ async function checkPassword(){
     lockScreen.style.transform = "translateY(-100%)";
     stories.style.transform = "translateY(0)";
     topbar.style.display = "flex";
-    // important: don't rebuild here (we already built on load)
-  } else {
-    input = "";
-    dotEls.forEach(d => d.classList.remove("filled"));
+    /* 🔑 IMPORTANTE:
+       No reconstruimos aquí. El build inicial (DOMContentLoaded) ya dejó
+       preparado el badge y los .newItem. Así no “pisamos” la marca. */
+  }else{
+    input="";
+    dotEls.forEach(d=>d.classList.remove("filled"));
     renderKeypad();
-    showMessage("Código incorrecto", true); // shake
+    showMessage("Código incorrecto", true);
   }
 }
 
 /* ===========================
-   BUILD TRACK (creates DOM nodes for stories)
-   - supports image and video backgrounds
-   - attaches audio button logic for videos
+   STORIES: CREACIÓN
    =========================== */
-function crearStoryNode(item, originalIndex){
+function crearStory(item, originalIndex){
   const sec = document.createElement("section");
   sec.className = "story";
+  sec.style.backgroundImage = `url('${item.fondo}')`;
   sec.dataset.original = String(originalIndex);
-
-  // create media (video or img)
-  const isVideo = /\.(mp4|webm|ogg)$/i.test(item.fondo);
-  if(isVideo){
-    const vid = document.createElement("video");
-    vid.src = item.fondo;
-    vid.autoplay = true;
-    vid.muted = true;                  // start muted (browsers require)
-    vid.playsInline = true;
-    vid.loop = true;
-    vid.setAttribute("preload", "auto");
-    vid.setAttribute("webkit-playsinline", "true");
-    sec.appendChild(vid);
-
-    // audio control button
-    const btn = document.createElement("button");
-    btn.className = "audioBtn material-symbols-outlined";
-    btn.type = "button";
-    btn.title = "Activar audio";
-    btn.textContent = "volume_off";
-    // toggle logic attached later in attachMediaControls()
-    sec.appendChild(btn);
-  } else {
-    const img = document.createElement("img");
-    img.src = item.fondo;
-    img.alt = item.titulo || "Imagen";
-    sec.appendChild(img);
-  }
-
-  // content overlay
-  const content = document.createElement("div");
-  content.className = "storyContent";
-  content.innerHTML = `<h2>${item.titulo}</h2><div class="date">${formateaFechaES(item.fecha)}</div><p>${item.descripcion}</p>`;
-  sec.appendChild(content);
-
+  sec.innerHTML = `
+    <div class="storyContent">
+      <h2>${item.titulo}</h2>
+      <div class="date">${formateaFechaES(item.fecha)}</div>
+      <p>${item.descripcion}</p>
+    </div>`;
   return sec;
 }
 
-/* buildTrack will create clones for infinite loop:
-   [ clone-last ] [ real0 ] [ real1 ] ... [ realN-1 ] [ clone-first ]
-*/
+/* ===========================
+   BUILD + MEDIDAS
+   =========================== */
 function buildTrack(){
   track.innerHTML = "";
-  if(N === 0) return;
-
-  // clone last
-  const lastNode = crearStoryNode(recuerdos[N-1], N-1);
-  track.appendChild(lastNode);
-
-  // real nodes
-  recuerdos.forEach((it, idx)=>{
-    const node = crearStoryNode(it, idx);
-    track.appendChild(node);
-  });
-
-  // clone first
-  const firstNode = crearStoryNode(recuerdos[0], 0);
-  track.appendChild(firstNode);
+  if(N===0) return;
+  const first = crearStory(recuerdos[0], 0);
+  const last  = crearStory(recuerdos[N-1], N-1);
+  /* Clones para loop infinito: arriba = último, abajo = primero */
+  track.appendChild(last.cloneNode(true));            // index 0 (clone up)
+  recuerdos.forEach((it,idx)=> track.appendChild(crearStory(it, idx))); // index 1..N (reales)
+  track.appendChild(first.cloneNode(true));           // index N+1 (clone down)
 }
-
-/* Attach audio controls for videos: toggle mute/unmute and update icon */
-function attachMediaControls(){
-  const nodes = Array.from(track.children);
-  nodes.forEach(node => {
-    const vid = node.querySelector("video");
-    const btn = node.querySelector(".audioBtn");
-    if(vid && btn){
-      // ensure starts muted
-      vid.muted = true;
-      btn.textContent = "volume_off";
-      // click toggles
-      btn.onclick = async (ev) => {
-        ev.stopPropagation();
-        if(vid.muted){
-          vid.muted = false;
-          btn.textContent = "volume_up";
-          // try to play with audio
-          try{ await vid.play(); }catch(e){ /* browser blocked - still unmuted, user can try again */ }
-        } else {
-          vid.muted = true;
-          btn.textContent = "volume_off";
-        }
-      };
-      // when the user interacts anywhere in the story, attempt to resume play (some browsers pause)
-      node.addEventListener("pointerdown", ()=>{ if(vid.paused){ vid.play().catch(()=>{}); } }, {passive:true});
-    }
-  });
+function measure(){ pageH = window.innerHeight || document.documentElement.clientHeight; }
+function setTransformY(y, withAnim=false){
+  track.style.transition = withAnim ? "transform .35s cubic-bezier(.22,.61,.36,1)" : "none";
+  track.style.transform = `translate3d(0,${y}px,0)`; // GPU
 }
 
 /* ===========================
-   MEASURE & TRANSFORM HELPERS
+   ÍNDICES Y CONTADOR
    =========================== */
-function measure(){
-  pageH = stories.clientHeight || window.innerHeight || document.documentElement.clientHeight;
-}
-function setTransformY(y, animate = false){
-  track.style.transition = animate ? "transform .38s cubic-bezier(.22,.61,.36,1)" : "none";
-  track.style.transform = `translate3d(0,${y}px,0)`;
-}
-
-/* ===========================
-   INDEX HELPERS: real index & counter
-   =========================== */
-function realIndexFromPos(){
-  // pos 1..N -> real index 0..N-1
-  if(N === 0) return 0;
+function realIndexFromPos(){ // 0..N-1
   let r = pos - 1;
   if(r < 0) r = 0;
-  if(r >= N) r = N - 1;
+  if(r >= N) r = N-1;
   return r;
 }
-
 function updateCounterFromPos(){
   const realIdx = realIndexFromPos();
-  currentIdxEl.textContent = String(realIdx + 1);
-  localStorage.setItem("lastSeenIndex", String(realIdx));
+  currentIdxEl.textContent = String(realIdx+1);
+  localStorage.setItem("lastSeenIndex", realIdx);
 
-  // When entering a story: if it's newItem, mark it as seen for this session but KEEP the class until we leave
-  const cur = track.children[pos];
-  if(cur && cur.classList.contains("newItem")){
-    if(!cur.dataset.seen) cur.dataset.seen = "1"; // first time seen while in this session
-    // DO NOT remove .newItem now — remains visible while viewing
-  }
-}
-
-/* When leaving a story (previousPos), if it was newItem and had been seen once, remove the newItem */
-function handleLeaving(previousPosIndex){
-  if(typeof previousPosIndex !== "number") return;
-  const el = track.children[previousPosIndex];
-  if(!el) return;
-  if(el.classList.contains("newItem") && el.dataset.seen === "1"){
-    // remove marking because the user already saw it while in it
-    el.classList.remove("newItem");
-    delete el.dataset.seen;
-    // update badge count based on remaining real new items (children 1..N)
-    const realNodes = Array.from(track.children).slice(1, N+1);
-    const remain = realNodes.filter(x => x.classList.contains("newItem")).length;
-    if(remain <= 0){
-      newBadge.classList.remove("show");
-      newBadge.style.display = "none";
-      localStorage.setItem("lastCount", String(N));
-    } else {
-      newBadge.textContent = String(remain);
+  // ✅ Usamos el elemento en la posición actual (incluye clones) para no fallar con duplicados
+  const currentEl = track.children[pos];
+  if(currentEl && currentEl.classList.contains("newItem")){
+    if(currentEl.dataset.seen === "1"){
+      // 2ª vez que se ve → quitar marca
+      currentEl.classList.remove("newItem");
+      // Si ya no quedan nuevos en los REALES, quitamos badge y actualizamos lastCount
+      const anyNewLeft = [...track.children].slice(1, N+1).some(el=>el.classList.contains("newItem"));
+      if(!anyNewLeft){
+        newBadge.classList.remove("show");
+        newBadge.style.display = "none";
+        localStorage.setItem("lastCount", String(N)); // ya todo visto
+      }
+    }else{
+      // 1ª vez que se ve → marcar como vista una vez pero mantener rojito
+      currentEl.dataset.seen = "1";
     }
   }
 }
 
 /* ===========================
-   NORMALIZE CLONES (loop) & goToPos
+   NORMALIZACIÓN DE CLONES
    =========================== */
-function goToPos(targetPos, animate = true){
-  pos = targetPos;
-  setTransformY(-pos * pageH, animate);
+function goToPos(p, animate=true){
+  pos = p;
+  setTransformY(-pos*pageH, animate);
   updateCounterFromPos();
 }
 function normalizeIfClone(){
-  if(pos === 0){
+  if(pos === 0){               // está en clone de arriba → saltar al real al fondo
     pos = N;
-    setTransformY(-pos * pageH, false);
-  } else if(pos === N + 1){
+    setTransformY(-pos*pageH, false);
+  }else if(pos === N+1){       // está en clone de abajo → saltar al real del inicio
     pos = 1;
-    setTransformY(-pos * pageH, false);
+    setTransformY(-pos*pageH, false);
   }
   updateCounterFromPos();
 }
 
 /* ===========================
-   POINTER / SWIPE / WHEEL
+   DRAG / WHEEL (fluidez)
    =========================== */
-let prevPosForLeaving = null;
-
 function onPointerDown(e){
   if(animating) return;
   dragging = true;
   startY = e.clientY;
-  baseY = -pos * pageH;
+  baseY = -pos*pageH;
+  latestDelta = 0;
   lastMoveTime = Date.now();
   lastMoveY = e.clientY;
   velocity = 0;
-  // save current pos as "previous" for leaving logic later
-  prevPosForLeaving = pos;
   track.style.transition = "none";
-  try{ track.setPointerCapture && track.setPointerCapture(e.pointerId); }catch(_){}
+  e.preventDefault();
+
+  const loop = ()=>{
+    if(!dragging) return;
+    // amortiguación sutil
+    const y = baseY + latestDelta*0.98;
+    track.style.transform = `translate3d(0,${y}px,0)`;
+    rafId = requestAnimationFrame(loop);
+  };
+  rafId = requestAnimationFrame(loop);
 }
 function onPointerMove(e){
   if(!dragging) return;
-  const dy = e.clientY - startY;
-  setTransformY(baseY + dy, false);
+  latestDelta = e.clientY - startY;
   const now = Date.now();
-  const dt = Math.max(16, now - lastMoveTime);
-  velocity = (e.clientY - lastMoveY) / dt;
+  velocity = (e.clientY - lastMoveY) / Math.max(16, now - lastMoveTime);
   lastMoveTime = now;
   lastMoveY = e.clientY;
 }
 function onPointerUp(e){
   if(!dragging) return;
   dragging = false;
-  try{ track.releasePointerCapture && track.releasePointerCapture(); }catch(_){}
-  const dy = (e && e.clientY) ? e.clientY - startY : 0;
-  const abs = Math.abs(dy);
-  const flick = Math.abs(velocity) > 0.35; // px/ms
-  if(abs > pageH * 0.12 || flick){
-    if(dy < 0 || velocity < -0.35) pos += 1;
-    else if(dy > 0 || velocity > 0.35) pos -= 1;
+  cancelAnimationFrame(rafId);
+
+  const dy = e.clientY - startY;
+  const v  = velocity;
+
+  // Umbral por desplazamiento o inercia
+  const shouldFlip = Math.abs(dy) > 50 || Math.abs(v) > 0.35;
+  if(shouldFlip){
+    if(dy > 0) pos--; else pos++;
   }
   animating = true;
   goToPos(pos, true);
-  // when transition ends -> call onTransitionEnd
   track.addEventListener("transitionend", onTransitionEnd, {once:true});
 }
-function onPointerCancel(e){ if(dragging) onPointerUp(e); }
-
 function onTransitionEnd(){
   animating = false;
-  // handle leaving (remove .newItem if the previous one was seen)
-  handleLeaving(prevPosForLeaving);
   normalizeIfClone();
 }
 
-// wheel support (desktop)
-let lastWheel = 0;
+// soporte wheel en desktop (rate-limited)
+let lastWheel=0;
 function onWheel(e){
-  const now = Date.now();
-  if(animating || (now - lastWheel < 300)) return;
+  const now=Date.now();
+  if(animating || now - lastWheel < 300) return;
   lastWheel = now;
-  if(Math.abs(e.deltaY) < 5) return;
-  if(e.deltaY > 0) pos += 1; else pos -= 1;
-  animating = true;
-  goToPos(pos, true);
+  if(e.deltaY > 0) pos++; else pos--;
+  animating = true; goToPos(pos, true);
   track.addEventListener("transitionend", onTransitionEnd, {once:true});
 }
 
 /* ===========================
-   GO TO real index (1..N)
+   SALTO DIRECTO POR NÚMERO
    =========================== */
 function goToIndexReal(n){
   if(!N) return;
   n = Math.max(1, Math.min(N, n|0));
-  pos = n;
-  animating = true;
-  goToPos(pos, true);
+  pos = n; // porque 1..N son reales
+  animating = true; goToPos(pos, true);
   track.addEventListener("transitionend", onTransitionEnd, {once:true});
 }
 
 /* ===========================
-   FETCH & BUILD (main)
-   - marks new items based on lastCount
-   - shows badge in lockscreen if new
+   FETCH + BUILD + NUEVOS
    =========================== */
-function preloadFondos(list){
-  list.forEach(i => {
-    if(!i || !i.fondo) return;
-    if(!/\.(mp4|webm|ogg)$/i.test(i.fondo)){
-      const im = new Image(); im.src = i.fondo;
-    }
-  });
-}
+function preloadFondos(arr){ arr.forEach(x=>{ const img=new Image(); img.src=x.fondo; }); }
 
-async function fetchAndBuild(silent = false){
-  let data = [];
+async function fetchAndBuild(silent=false){
+  let data;
   try{
     const res = await fetch(RECUERDOS_JSON, {cache:"no-store"});
     data = await res.json();
-    if(!Array.isArray(data)) data = [];
-  }catch(e){
+  }catch(_){
     data = [{titulo:"Hola",fecha:"2025-08-21",descripcion:"Agrega recuerdos.json",fondo:"momentos/foto1.jpg"}];
   }
 
   recuerdos = data;
   N = recuerdos.length;
-  totalIdxEl.textContent = String(Math.max(1, N));
-
+  totalIdxEl.textContent = String(Math.max(1,N));
   preloadFondos(recuerdos);
+
   buildTrack();
   measure();
 
-  // get lastSeenIndex to restore pos
+  // Restaurar última posición vista (lastSeenIndex)
   let saved = parseInt(localStorage.getItem("lastSeenIndex") || "0");
-  if(isNaN(saved) || saved < 0 || saved >= N) saved = 0;
-  pos = saved + 1;
+  if(isNaN(saved) || saved<0 || saved>=N) saved = 0;
+  pos = saved + 1; // 1..N
+  setTransformY(-pos*pageH, false);
 
-  // mark new items comparing with lastCount
+  // Marcar historias NUEVAS comparando con lastCount
   lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0");
   const hasNew = N > lastKnownCount;
-  const realNodes = Array.from(track.children).slice(1, N+1); // real nodes only
-  realNodes.forEach((el, idx) => {
-    if(hasNew && idx >= lastKnownCount) {
-      el.classList.add("newItem");
-      delete el.dataset.seen; // ensure fresh
-    } else {
-      el.classList.remove("newItem");
-      delete el.dataset.seen;
-    }
+
+  // Marcar solo en los REALES (1..N)
+  const nodes = [...track.children].slice(1, N+1);
+  nodes.forEach((el, iReal)=>{
+    const originalIdx = iReal; // 0..N-1
+    if(hasNew && originalIdx >= lastKnownCount) el.classList.add("newItem");
+    else el.classList.remove("newItem");
+    el.dataset.seen = ""; // reset del flag de vista (se controla por sesión)
   });
 
-  // show badge in lockscreen if new items exist
+  // Badge en lockscreen (pegado al corazón)
   if(hasNew){
     const diff = N - lastKnownCount;
     newBadge.textContent = String(diff);
     newBadge.classList.add("show");
     newBadge.style.display = "inline-block";
-  } else {
+  }else{
     newBadge.classList.remove("show");
     newBadge.style.display = "none";
   }
 
-  // attach video audio buttons
-  attachMediaControls();
-
-  // set initial transform to saved position (no animation)
-  setTransformY(-pos * pageH, false);
   updateCounterFromPos();
 
   if(!silent){
@@ -600,80 +546,75 @@ async function fetchAndBuild(silent = false){
     setTimeout(()=> track.classList.remove("track-refreshing"), 320);
   }
 
-  // attach events once (to track and window)
+  // Listeners una sola vez (track es el mismo nodo siempre)
   if(!builtOnce){
     builtOnce = true;
-    // pointer events
-    track.addEventListener("pointerdown", onPointerDown, {passive:false});
-    track.addEventListener("pointermove", onPointerMove, {passive:true});
-    track.addEventListener("pointerup", onPointerUp, {passive:true});
-    track.addEventListener("pointercancel", onPointerCancel, {passive:true});
-    track.addEventListener("pointerleave", onPointerUp, {passive:true});
-
-    // wheel
+    track.addEventListener("pointerdown", onPointerDown);
+    track.addEventListener("pointermove", onPointerMove);
+    track.addEventListener("pointerup", onPointerUp);
     stories.addEventListener("wheel", onWheel, {passive:true});
 
-    // search input
-    slideSearch.addEventListener("change", ()=>{ const v = parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v); });
-    slideSearch.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ const v = parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v); } });
+    slideSearch.addEventListener("change", ()=>{
+      const v = parseInt(slideSearch.value, 10);
+      if(!isNaN(v)) goToIndexReal(v);
+    });
+    slideSearch.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        const v = parseInt(slideSearch.value, 10);
+        if(!isNaN(v)) goToIndexReal(v);
+      }
+    });
 
-    // resize
-    window.addEventListener("resize", ()=> {
+    window.addEventListener("resize", ()=>{
       const realIdx = realIndexFromPos();
       measure();
       pos = realIdx + 1;
-      setTransformY(-pos * pageH, false);
-      updateCounterFromPos();
+      setTransformY(-pos*pageH, false);
     });
   }
 }
 
 /* ===========================
-   REFRESH button
-   - clears "new" flags (user refreshed -> treat as seen)
+   REFRESH
    =========================== */
 refreshBtn.addEventListener("click", async ()=>{
   if(refreshBtn.classList.contains("refreshing")) return;
   refreshBtn.classList.add("refreshing");
-  // Consider refresh as user checking for new content -> clear lastCount
-  localStorage.setItem("lastCount", String(N));
-  await fetchAndBuild(false);
-  pos = 1;
-  animating = true;
-  goToPos(pos, true);
+  await fetchAndBuild(false);   // recarga JSON y re-aplica newItem / badge
+  pos = 1;                      // volver al primero con animación
+  animating = true; goToPos(pos, true);
   track.addEventListener("transitionend", ()=>{
-    animating = false;
-    normalizeIfClone();
+    animating = false; normalizeIfClone();
     refreshBtn.classList.remove("refreshing");
   }, {once:true});
 });
 
 /* ===========================
-   Start (load saved data and build)
+   INIT
    =========================== */
 document.addEventListener("DOMContentLoaded", async ()=>{
-  await fetchAndBuild(true);
+  await fetchAndBuild(true); // Construimos una vez (badge y newItem quedan listos en lockscreen)
 });
 
 /* ===========================
-   Small UX: prevent gesture zoom, doubletap zoom guard
+   ANTIZOOM iOS (calidad UX)
    =========================== */
-document.addEventListener('gesturestart', e=> e.preventDefault());
-document.addEventListener('gesturechange', e=> e.preventDefault());
-document.addEventListener('gestureend', e=> e.preventDefault());
-
-let lastTouchEnd = 0;
-document.addEventListener('touchend', (e)=>{
-  const now = Date.now();
-  if(now - lastTouchEnd <= 300) e.preventDefault();
-  lastTouchEnd = now;
-}, {passive:false});
+document.addEventListener('gesturestart', e=>e.preventDefault());
+document.addEventListener('gesturechange', e=>e.preventDefault());
+document.addEventListener('gestureend', e=>e.preventDefault());
+let lastTouchEnd=0;
+document.addEventListener('touchend', e=>{
+  const now=Date.now();
+  if(now-lastTouchEnd<=300){ e.preventDefault(); } // doble tap zoom
+  lastTouchEnd=now;
+},{passive:false});
+document.addEventListener('wheel', e=>{ if(e.ctrlKey){ e.preventDefault(); } }, {passive:false});
 
 /* ===========================
-   Service Worker registration (if present)
+   SERVICE WORKER
    =========================== */
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  navigator.serviceWorker.register('service-worker.js').catch(console.error);
 }
 </script>
 </body>
