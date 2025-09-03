@@ -5,17 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>SYA</title>
 
-<!-- ==========================
-     PWA CONFIG
-     ========================== -->
+<!-- PWA -->
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- ==========================
-     FUENTES / ICONOS
-     ========================== -->
+<!-- FUENTES / ICONOS -->
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300" rel="stylesheet"/>
 
@@ -34,7 +30,6 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
 html,body{
   width:100%;
-  height:100vh;
   height:100dvh;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color:var(--text);
@@ -64,7 +59,7 @@ html,body{
 }
 @keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
 #newBadge{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;position:absolute;top:0;right:-4px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;position:absolute;top:0;right:-4px;
   background:var(--notif-bg);color:#fff;font-size:.8rem;font-weight:700;
   border-radius:999px;padding:.20rem .40rem;display:none;opacity:0;transform:scale(.5);
   transition:transform .36s cubic-bezier(.2,.9,.3,1), opacity .36s;
@@ -108,12 +103,10 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   opacity:0.4;
   pointer-events:none;
 }
-
 #refreshBtn.refreshing{animation:spin-continuous .9s linear infinite;}
 @keyframes spin-continuous{from{transform:rotate(0);}to{transform:rotate(360deg);}}
 #refreshBtn:active{animation:spin-bounce .6s ease;}
 @keyframes spin-bounce{0%{transform:scale(.9) rotate(0);}50%{transform:scale(1.15) rotate(180deg);}100%{transform:scale(1) rotate(360deg);}}
-
 
 /* -------------------------
    STORIES
@@ -129,7 +122,6 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   transform:translate3d(0,0,0);
 }
 .story{
-  height:100vh;
   height:100dvh;
   width:100%;
   display:flex;
@@ -139,8 +131,8 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   text-align:center;
   position:relative;
   padding:2rem;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom);
+  padding-top:calc(env(safe-area-inset-top) + 1rem);
+  padding-bottom:calc(env(safe-area-inset-bottom) + 1rem);
   background-size:cover;
   background-position:center;
   will-change:transform;
@@ -164,7 +156,12 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
    VIDEO & SOUND BUTTON
    ------------------------- */
 .story video.storyVideo{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
 }
 .soundBtn{
   position:absolute;
@@ -178,14 +175,15 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   color:var(--text);
   cursor:pointer;
   font-size:1.8rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 </style>
 </head>
 <body oncontextmenu="return false;">
 
-<!-- -------------------------
-     LOCKSCREEN
-     ------------------------- -->
+<!-- LOCKSCREEN -->
 <div id="lockScreen">
   <div class="lockContent">
     <span class="material-symbols-outlined heart" aria-hidden="true">
@@ -198,9 +196,7 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   </div>
 </div>
 
-<!-- -------------------------
-     TOPBAR
-     ------------------------- -->
+<!-- TOPBAR -->
 <div id="topbar">
   <div class="searchWrap">
     <span class="material-symbols-outlined icon" aria-hidden="true">search</span>
@@ -213,16 +209,14 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   </div>
 </div>
 
-<!-- -------------------------
-     STORIES
-     ------------------------- -->
+<!-- STORIES -->
 <div id="stories" aria-label="Historias de pareja">
   <div id="track" role="list"></div>
 </div>
 
 <script>
 /* ===========================
-   ESTADO GLOBAL
+   ESTADO GLOBAL (simplificado respecto al original)
    =========================== */
 const appState = {
   PASSWORD_HASH: "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d",
@@ -244,9 +238,7 @@ const appState = {
   builtOnce: false
 };
 
-/* ===========================
-   ELEMENTOS
-   =========================== */
+/* ELEMENTOS */
 const lockScreen = document.getElementById("lockScreen");
 const dotsWrap = document.getElementById("pinDots");
 const keypad = document.getElementById("keypad");
@@ -260,9 +252,7 @@ const totalIdxEl = document.getElementById("totalIdx");
 const newBadge = document.getElementById("newBadge");
 const refreshBtn = document.getElementById("refreshBtn");
 
-/* ===========================
-   PIN DOTS
-   =========================== */
+/* PIN DOTS */
 const dotEls = [];
 for(let i=0;i<appState.PIN_LENGTH;i++){
   const d = document.createElement("div");
@@ -271,9 +261,7 @@ for(let i=0;i<appState.PIN_LENGTH;i++){
   dotEls.push(d);
 }
 
-/* ===========================
-   MENSAJE
-   =========================== */
+/* MENSAJE */
 function showMessage(text){
   msg.classList.remove("show");
   setTimeout(()=>{
@@ -289,9 +277,7 @@ function formateaFechaES(iso){
   }catch(_){ return iso; }
 }
 
-/* ===========================
-   KEYPAD
-   =========================== */
+/* KEYPAD */
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function renderKeypad(){
   keypad.innerHTML = "";
@@ -308,15 +294,13 @@ function renderKeypad(){
 }
 renderKeypad();
 
-/* Soporte teclado físico */
+/* Teclado físico */
 document.addEventListener("keydown", e=>{
   if(e.key >= "0" && e.key <= "9") enterDigit(e.key);
   if(e.key === "Backspace") deleteDigit();
 });
 
-/* ===========================
-   PIN LOGIC
-   =========================== */
+/* PIN LOGIC */
 let input="";
 async function hashPassword(pwd){
   const enc = new TextEncoder().encode(pwd);
@@ -350,20 +334,21 @@ async function checkPassword(){
   }
 }
 
-/* ===========================
-   STORIES
-   =========================== */
+/* STORIES: crear story (detecta vídeos .mp4 .webm .ogg .mov, case-insensitive) */
 function crearStory(item, originalIndex){
   const sec = document.createElement("section");
   sec.className = "story";
   sec.dataset.original = String(originalIndex);
 
+  // Si el JSON incluye autoplaySound:true -> marca para autounmute tras interacción
+  if(item.autoplaySound) sec.dataset.autoplaySound = "1";
+
   if(/\.(mp4|webm|ogg|mov)$/i.test(item.fondo)){
     sec.innerHTML = `
-      <video class="storyVideo" autoplay loop muted playsinline>
+      <video class="storyVideo" autoplay loop muted playsinline preload="auto">
         <source src="${item.fondo}">
       </video>
-      <button class="soundBtn material-symbols-outlined" aria-label="Sonido">volume_off</button>
+      <button class="soundBtn material-symbols-outlined" aria-label="Sonido" style="display:none">volume_off</button>
       <div class="storyContent">
         <h2>${item.titulo}</h2>
         <div class="date">${formateaFechaES(item.fecha)}</div>
@@ -380,6 +365,7 @@ function crearStory(item, originalIndex){
   }
   return sec;
 }
+
 function buildTrack(){
   track.innerHTML = "";
   if(appState.N===0) return;
@@ -389,29 +375,53 @@ function buildTrack(){
   appState.recuerdos.forEach((it,idx)=> track.appendChild(crearStory(it, idx)));
   track.appendChild(first.cloneNode(true));
 }
+
+/* Ajustar medida (altura visible) */
 function measure(){ appState.pageH = window.innerHeight || document.documentElement.clientHeight; }
+
+/* transform del track */
 function setTransformY(y, withAnim=false){
   track.style.transition = withAnim ? "transform .35s cubic-bezier(.22,.61,.36,1)" : "none";
   track.style.transform = `translate3d(0,${y}px,0)`;
 }
+
+/* indice real (sin clones) */
 function realIndexFromPos(){
   let r = appState.pos - 1;
   if(r < 0) r = 0;
   if(r >= appState.N) r = appState.N-1;
   return r;
 }
+
+/* actualizar contador y comportamientos secundarios */
 function updateCounterFromPos(){
   const realIdx = realIndexFromPos();
   currentIdxEl.textContent = String(realIdx+1);
   localStorage.setItem("lastSeenIndex", realIdx);
 
-  // 👉 Refresh bloqueado solo en la primera storie
+  // 👉 Refresh bloqueado si estamos en la primera storie (aparece, pero atenuado y no cliqueable)
   if(realIdx === 0){
     refreshBtn.classList.add("disabled");
   } else {
     refreshBtn.classList.remove("disabled");
   }
 
+  // Pausar todos los videos que no estén en la storie actual y reproducir la actual
+  const currentSection = track.children[appState.pos];
+  const videos = track.querySelectorAll(".storyVideo");
+  videos.forEach(video => {
+    const parent = video.closest(".story");
+    if(parent === currentSection){
+      video.play().catch(()=>{});
+    } else {
+      try{
+        video.pause();
+        video.currentTime = 0;
+      }catch(e){}
+    }
+  });
+
+  // Control de nueva item (mantener lógica original)
   const currentEl = track.children[appState.pos];
   if(currentEl && currentEl.classList.contains("newItem")){
     if(currentEl.dataset.seen === "1"){
@@ -427,11 +437,13 @@ function updateCounterFromPos(){
     }
   }
 }
+
 function goToPos(p, animate=true){
   appState.pos = p;
   setTransformY(-appState.pos*appState.pageH, animate);
   updateCounterFromPos();
 }
+
 function normalizeIfClone(){
   if(appState.pos === 0){
     appState.pos = appState.N;
@@ -442,6 +454,8 @@ function normalizeIfClone(){
   }
   updateCounterFromPos();
 }
+
+/* SWIPE / DRAG HANDLERS */
 function onPointerDown(e){
   if(appState.animating) return;
   appState.dragging = true;
@@ -496,7 +510,76 @@ function goToIndexReal(n){
   appState.animating = true; goToPos(appState.pos, true);
   track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
 }
+
+/* Preload (mantengo tu lógica original) */
 function preloadFondos(arr){ arr.forEach(x=>{ const img=new Image(); img.src=x.fondo; }); }
+
+/* -------------------------
+   CONTROL DE BOTONES DE SONIDO
+   ------------------------- */
+function attachSoundControls(){
+  const videos = track.querySelectorAll('.storyVideo');
+  videos.forEach(video => {
+    const sec = video.closest('.story');
+    const btn = sec.querySelector('.soundBtn');
+
+    // function para detectar si hay audio (mejor intento cross-browser)
+    function detectAudio(){
+      let hasAudio = true;
+      try {
+        if (typeof video.mozHasAudio !== 'undefined') {
+          hasAudio = !!video.mozHasAudio;
+        } else if (typeof video.webkitAudioDecodedByteCount !== 'undefined') {
+          hasAudio = video.webkitAudioDecodedByteCount > 0;
+        } else {
+          // fallback: asumimos true (no hay método fiable universal)
+          hasAudio = true;
+        }
+      } catch(err){
+        hasAudio = true;
+      }
+      if(btn) btn.style.display = hasAudio ? 'inline-flex' : 'none';
+    }
+
+    // oculto inicialmente hasta detectar
+    if(btn) btn.style.display = 'none';
+
+    // detecto cuando hay data suficiente para saber si hay audio
+    video.addEventListener('canplay', detectAudio);
+    // en caso de que ya haya cargado
+    setTimeout(detectAudio, 250);
+
+    if(btn){
+      // Evitar que el pointerdown en el botón comience el drag en track
+      btn.addEventListener('pointerdown', e => e.stopPropagation());
+      btn.addEventListener('pointermove', e => e.stopPropagation());
+      // click para alternar sonido (handler local para evitar delegaciones)
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        try{
+          if(video.muted){
+            video.muted = false;
+            btn.textContent = "volume_up";
+          } else {
+            video.muted = true;
+            btn.textContent = "volume_off";
+          }
+        }catch(err){}
+      });
+      // icono inicial
+      btn.textContent = video.muted ? "volume_off" : "volume_up";
+    }
+
+    // Si la sección pide autounmute (autoplaySound en JSON), mostrar el botón para que el usuario lo vea
+    if(sec.dataset.autoplaySound === "1" && btn){
+      btn.style.display = 'inline-flex';
+    }
+  });
+}
+
+/* -------------------------
+   FETCH & BUILD
+   ------------------------- */
 async function fetchAndBuild(silent=false){
   let data;
   try{
@@ -511,10 +594,16 @@ async function fetchAndBuild(silent=false){
   preloadFondos(appState.recuerdos);
   buildTrack();
   measure();
+
+  // Attach sound controls after DOM nodes exist
+  attachSoundControls();
+
+  // set initial pos from storage (mantengo tu comportamiento original si quieres)
   let saved = parseInt(localStorage.getItem("lastSeenIndex") || "0");
   if(isNaN(saved) || saved<0 || saved>=appState.N) saved = 0;
   appState.pos = saved + 1;
   setTransformY(-appState.pos*appState.pageH, false);
+
   appState.lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0");
   const hasNew = appState.N > appState.lastKnownCount;
   const nodes = [...track.children].slice(1, appState.N+1);
@@ -532,22 +621,30 @@ async function fetchAndBuild(silent=false){
     newBadge.classList.remove("show");
     newBadge.style.display = "none";
   }
+
   updateCounterFromPos();
+
   if(!silent){
     track.classList.add("track-refreshing");
     setTimeout(()=> track.classList.remove("track-refreshing"), 320);
   }
+
   if(!appState.builtOnce){
     appState.builtOnce = true;
+    // Eventos de swipe en track
     track.addEventListener("pointerdown", onPointerDown);
     track.addEventListener("pointermove", onPointerMove);
     track.addEventListener("pointerup", onPointerUp);
+    // También por seguridad en caso de cancel/leave
+    track.addEventListener("pointercancel", onPointerUp);
     stories.addEventListener("wheel", onWheel, {passive:true});
     slideSearch.addEventListener("change", ()=>{const v=parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v);});
     slideSearch.addEventListener("keydown", (e)=>{if(e.key==="Enter"){const v=parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v);}});
     window.addEventListener("resize", ()=>{const realIdx=realIndexFromPos(); measure(); appState.pos=realIdx+1; setTransformY(-appState.pos*appState.pageH,false);});
   }
 }
+
+/* REFRESH */
 refreshBtn.addEventListener("click", async ()=>{
   if(refreshBtn.classList.contains("refreshing") || refreshBtn.classList.contains("disabled")) return;
   refreshBtn.classList.add("refreshing");
@@ -559,30 +656,36 @@ refreshBtn.addEventListener("click", async ()=>{
     refreshBtn.classList.remove("refreshing");
   }, {once:true});
 });
+
+/* initial fetch */
 document.addEventListener("DOMContentLoaded", async ()=>{ await fetchAndBuild(true); });
 
-/* ===========================
-   BOTÓN DE SONIDO
-   =========================== */
-document.addEventListener("click", e=>{
-  if(e.target.classList.contains("soundBtn")){
-    const btn = e.target;
-    const video = btn.parentElement.querySelector(".storyVideo");
-    if(video){
-      if(video.muted){
+/* -------------------------
+   PRIMERA INTERACCIÓN -> autounmute opcional
+   (solo para stories marcadas con autoplaySound:true en el JSON)
+   ------------------------- */
+let firstInteractionHandled = false;
+function handleFirstInteraction(){
+  if(firstInteractionHandled) return;
+  firstInteractionHandled = true;
+  // desmutear la storie visible si requiere autoplaySound
+  const current = track.children[appState.pos];
+  if(current && current.dataset.autoplaySound === "1"){
+    const video = current.querySelector(".storyVideo");
+    const btn = current.querySelector(".soundBtn");
+    try{
+      if(video){
         video.muted = false;
-        btn.textContent = "volume_up";
-      }else{
-        video.muted = true;
-        btn.textContent = "volume_off";
+        if(btn) btn.textContent = "volume_up";
       }
-    }
+    }catch(e){}
   }
-});
+}
+document.addEventListener("pointerdown", handleFirstInteraction, {once:true});
 
-/* ===========================
-   ANTI-ZOOM iOS
-   =========================== */
+/* -------------------------
+   ANTI-ZOOM iOS + accesibilidad
+   ------------------------- */
 document.addEventListener('gesturestart', e=>e.preventDefault());
 document.addEventListener('gesturechange', e=>e.preventDefault());
 document.addEventListener('gestureend', e=>e.preventDefault());
@@ -594,9 +697,7 @@ document.addEventListener('touchend', e=>{
 },{passive:false});
 document.addEventListener('wheel', e=>{ if(e.ctrlKey){ e.preventDefault(); } }, {passive:false});
 
-/* ===========================
-   SERVICE WORKER
-   =========================== */
+/* SERVICE WORKER */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('service-worker.js').catch(console.error);
 }
