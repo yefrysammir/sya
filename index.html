@@ -217,7 +217,8 @@ html,body{
 
 <script>
 /* ===========================
-   ESTADO GLOBAL (simplificado respecto al original)
+   VERSION MEJORADA PARA SWIPE + LAZY-VIDEO + SEGURIDAD
+   Reemplaza TODO el <script> anterior por este bloque.
    =========================== */
 const appState = {
   PASSWORD_HASH: "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d",
@@ -236,10 +237,14 @@ const appState = {
   lastMoveTime: 0,
   lastMoveY: 0,
   lastKnownCount: parseInt(localStorage.getItem("lastCount") || "0"),
-  builtOnce: false
+  builtOnce: false,
+  activePointerId: null,
+  // timers to avoid stuck states
+  transitionFallbackTimer: null,
+  dragReleaseTimer: null
 };
 
-/* ELEMENTOS */
+/* ELEMENTOS (mismos ids que tu HTML) */
 const lockScreen = document.getElementById("lockScreen");
 const dotsWrap = document.getElementById("pinDots");
 const keypad = document.getElementById("keypad");
@@ -262,7 +267,7 @@ for(let i=0;i<appState.PIN_LENGTH;i++){
   dotEls.push(d);
 }
 
-/* MENSAJE */
+/* Mensajes */
 function showMessage(text){
   msg.classList.remove("show");
   setTimeout(()=>{
@@ -285,12 +290,12 @@ function renderKeypad(){
   shuffle([...Array(10).keys()]).forEach(n=>{
     const k=document.createElement("div"); 
     k.className="key"; k.textContent=n; k.setAttribute("role","button"); k.setAttribute("aria-label","Número "+n);
-    k.addEventListener("pointerdown",()=>enterDigit(n));
+    k.addEventListener("pointerdown",()=>enterDigit(n), {passive:true});
     keypad.appendChild(k);
   });
   const del=document.createElement("div"); 
   del.className="key material-symbols-outlined"; del.textContent="backspace"; del.setAttribute("role","button"); del.setAttribute("aria-label","Borrar");
-  del.addEventListener("pointerdown", deleteDigit);
+  del.addEventListener("pointerdown", deleteDigit, {passive:true});
   keypad.appendChild(del);
 }
 renderKeypad();
@@ -335,20 +340,18 @@ async function checkPassword(){
   }
 }
 
-/* STORIES: crear story (detecta vídeos .mp4 .webm .ogg .mov, case-insensitive) */
+/* ===========================
+   CREAR STORY: ahora VIDEO usa data-src para LAZY-LOAD
+   =========================== */
 function crearStory(item, originalIndex){
   const sec = document.createElement("section");
   sec.className = "story";
   sec.dataset.original = String(originalIndex);
 
-  // Si el JSON incluye autoplaySound:true -> marca para autounmute tras interacción
-  if(item.autoplaySound) sec.dataset.autoplaySound = "1";
-
   if(/\.(mp4|webm|ogg|mov)$/i.test(item.fondo)){
+    // video con data-src (no src directo)
     sec.innerHTML = `
-      <video class="storyVideo" autoplay loop muted playsinline preload="auto">
-        <source src="${item.fondo}">
-      </video>
+      <video class="storyVideo" muted playsinline loop preload="metadata" data-src="${item.fondo}"></video>
       <button class="soundBtn material-symbols-outlined" aria-label="Sonido" style="display:none">volume_off</button>
       <div class="storyContent">
         <h2>${item.titulo}</h2>
@@ -367,26 +370,28 @@ function crearStory(item, originalIndex){
   return sec;
 }
 
+/* buildTrack: conserva clones para looping circular */
 function buildTrack(){
   track.innerHTML = "";
   if(appState.N===0) return;
   const first = crearStory(appState.recuerdos[0], 0);
   const last  = crearStory(appState.recuerdos[appState.N-1], appState.N-1);
+  // agrego clones (sin asignar src aún)
   track.appendChild(last.cloneNode(true));
   appState.recuerdos.forEach((it,idx)=> track.appendChild(crearStory(it, idx)));
   track.appendChild(first.cloneNode(true));
 }
 
-/* Ajustar medida (altura visible) */
+/* Medida visible (altura) */
 function measure(){ appState.pageH = window.innerHeight || document.documentElement.clientHeight; }
 
-/* transform del track */
+/* Transforms */
 function setTransformY(y, withAnim=false){
   track.style.transition = withAnim ? "transform .35s cubic-bezier(.22,.61,.36,1)" : "none";
   track.style.transform = `translate3d(0,${y}px,0)`;
 }
 
-/* indice real (sin clones) */
+/* Índice real */
 function realIndexFromPos(){
   let r = appState.pos - 1;
   if(r < 0) r = 0;
@@ -394,35 +399,61 @@ function realIndexFromPos(){
   return r;
 }
 
-/* actualizar contador y comportamientos secundarios */
+/* -------------------------
+   LAZY-VIDEO: cargar solo current, prev y next
+   ------------------------- */
+function ensureVideoLoadedForIndex(idx){
+  const children = track.children;
+  if(!children || idx < 0 || idx >= children.length) return;
+  const sec = children[idx];
+  if(!sec) return;
+  const v = sec.querySelector(".storyVideo");
+  if(!v) return;
+  if(v.dataset.loaded === "1") return; // ya cargado
+  // asigno src y llamo load()
+  v.src = v.dataset.src || v.getAttribute('data-src');
+  try { v.load(); } catch(e){}
+  v.dataset.loaded = "1";
+  // si tiene botón de sonido, (re)adjunto handlers ligeros
+  attachSoundControlToSection(sec);
+}
+
+/* Pausar y reproducir vídeos: más conservador (no tocar currentTime) */
 function updateCounterFromPos(){
   const realIdx = realIndexFromPos();
   currentIdxEl.textContent = String(realIdx+1);
   localStorage.setItem("lastSeenIndex", realIdx);
 
-  // 👉 Refresh bloqueado si estamos en la primera storie (aparece, pero atenuado y no cliqueable)
+  // bloqueo refresh si estamos en la primera storie real
   if(realIdx === 0){
     refreshBtn.classList.add("disabled");
   } else {
     refreshBtn.classList.remove("disabled");
   }
 
-  // Pausar todos los videos que no estén en la storie actual y reproducir la actual
-  const currentSection = track.children[appState.pos];
+  // PRELOAD / LAZY load: cargo current, prev y next en el DOM (indices en track)
+  const cur = appState.pos; // en track.children
+  ensureVideoLoadedForIndex(cur);
+  ensureVideoLoadedForIndex(cur-1);
+  ensureVideoLoadedForIndex(cur+1);
+
+  // pausa/stop en los que no son current
   const videos = track.querySelectorAll(".storyVideo");
+  const currentSection = track.children[appState.pos];
   videos.forEach(video => {
     const parent = video.closest(".story");
     if(parent === currentSection){
+      // intento play (ignorar errores de autoplay)
       video.play().catch(()=>{});
     } else {
       try{
+        // pausa, pero no reseteo currentTime por defecto (evita glitches)
         video.pause();
-        video.currentTime = 0;
       }catch(e){}
     }
   });
 
-  // Control de nueva item (mantener lógica original)
+  // Lógica de newItem (se mantiene)
   const currentEl = track.children[appState.pos];
   if(currentEl && currentEl.classList.contains("newItem")){
     if(currentEl.dataset.seen === "1"){
@@ -439,10 +470,20 @@ function updateCounterFromPos(){
   }
 }
 
+/* Go to pos y normalizar clones */
 function goToPos(p, animate=true){
   appState.pos = p;
   setTransformY(-appState.pos*appState.pageH, animate);
   updateCounterFromPos();
+
+  // aseguro un fallback para evitar quedar animating=true indefinidamente
+  if(appState.transitionFallbackTimer) clearTimeout(appState.transitionFallbackTimer);
+  appState.transitionFallbackTimer = setTimeout(()=>{
+    if(appState.animating){
+      appState.animating = false;
+      normalizeIfClone();
+    }
+  }, 800); // ligeramente mayor que la transición
 }
 
 function normalizeIfClone(){
@@ -453,13 +494,29 @@ function normalizeIfClone(){
     appState.pos = 1;
     setTransformY(-appState.pos*appState.pageH, false);
   }
+  // limpio fallback timer si se disparó normal transition
+  if(appState.transitionFallbackTimer){
+    clearTimeout(appState.transitionFallbackTimer);
+    appState.transitionFallbackTimer = null;
+  }
   updateCounterFromPos();
 }
 
-/* SWIPE / DRAG HANDLERS */
+/* -------------------------
+   SWIPE / DRAG (mejorado: pointer capture + document listeners)
+   ------------------------- */
 function onPointerDown(e){
+  // solo start si no estamos en animación
   if(appState.animating) return;
+  // evitar que un doble-pointer cree conflicto
+  if(appState.dragging) return;
   appState.dragging = true;
+
+  appState.activePointerId = e.pointerId;
+  try{ track.setPointerCapture && track.setPointerCapture(e.pointerId); }catch(_){}
+  // attach listeners al documento para asegurarnos recibir move/up aunque salga del track
+  document.addEventListener('pointermove', onPointerMove, {passive:true});
+  document.addEventListener('pointerup', onPointerUp, {passive:true});
   appState.startY = e.clientY;
   appState.baseY = -appState.pos*appState.pageH;
   appState.latestDelta = 0;
@@ -468,16 +525,29 @@ function onPointerDown(e){
   appState.velocity = 0;
   track.style.transition = "none";
   e.preventDefault();
+
+  // RAF loop para actualizar transform (suave y GPU friendly)
   const loop = ()=>{
     if(!appState.dragging) return;
-    const y = appState.baseY + appState.latestDelta*0.98;
+    const y = appState.baseY + appState.latestDelta * 0.98;
     track.style.transform = `translate3d(0,${y}px,0)`;
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
+
+  // safety: si por alguna razón nunca recibimos pointerup (p. ej. crash), limpiamos en 3s
+  if(appState.dragReleaseTimer) clearTimeout(appState.dragReleaseTimer);
+  appState.dragReleaseTimer = setTimeout(()=>{
+    if(appState.dragging){
+      appState.dragging = false;
+      appState.animating = false;
+    }
+  }, 3500);
 }
 function onPointerMove(e){
   if(!appState.dragging) return;
+  // ignore other pointers
+  if(e.pointerId !== appState.activePointerId) return;
   appState.latestDelta = e.clientY - appState.startY;
   const now = Date.now();
   appState.velocity = (e.clientY - appState.lastMoveY) / Math.max(16, now - appState.lastMoveTime);
@@ -486,24 +556,50 @@ function onPointerMove(e){
 }
 function onPointerUp(e){
   if(!appState.dragging) return;
+  if(e.pointerId !== appState.activePointerId && appState.activePointerId !== null){
+    // si es otro pointer, lo ignoramos
+    return;
+  }
+  // limpiar listeners document
+  document.removeEventListener('pointermove', onPointerMove);
+  document.removeEventListener('pointerup', onPointerUp);
+  try{ track.releasePointerCapture && track.releasePointerCapture(appState.activePointerId); }catch(_){}
+  appState.activePointerId = null;
+
   appState.dragging = false;
-  const dy = e.clientY - appState.startY;
-  const v  = appState.velocity;
+  if(appState.dragReleaseTimer){ clearTimeout(appState.dragReleaseTimer); appState.dragReleaseTimer = null; }
+
+  const dy = (e.clientY || appState.lastMoveY) - appState.startY;
+  const v  = appState.velocity || 0;
   const shouldFlip = Math.abs(dy) > 50 || Math.abs(v) > 0.35;
-  if(shouldFlip){ if(dy > 0) appState.pos--; else appState.pos++; }
+  if(shouldFlip){
+    if(dy > 0) appState.pos--;
+    else appState.pos++;
+  }
   appState.animating = true;
   goToPos(appState.pos, true);
-  track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
+
+  // Garantía: si transitionend no llega, normalizamos por fallback (ya manejado en goToPos)
+  track.addEventListener("transitionend", ()=>{
+    appState.animating=false;
+    normalizeIfClone();
+  }, {once:true});
 }
+
 let lastWheel=0;
 function onWheel(e){
   const now=Date.now();
   if(appState.animating || now - lastWheel < 300) return;
   lastWheel = now;
   if(e.deltaY > 0) appState.pos++; else appState.pos--;
-  appState.animating = true; goToPos(appState.pos, true);
-  track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
+  appState.animating = true;
+  goToPos(appState.pos, true);
+  track.addEventListener("transitionend", ()=>{
+    appState.animating=false; normalizeIfClone();
+  }, {once:true});
 }
+
+/* Ir a índice real (1..N) */
 function goToIndexReal(n){
   if(!appState.N) return;
   n = Math.max(1, Math.min(appState.N, n|0));
@@ -512,74 +608,63 @@ function goToIndexReal(n){
   track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
 }
 
-/* Preload (mantengo tu lógica original) */
-function preloadFondos(arr){ arr.forEach(x=>{ const img=new Image(); img.src=x.fondo; }); }
-
 /* -------------------------
-   CONTROL DE BOTONES DE SONIDO
+   Attach sound control to a single section (idempotente)
    ------------------------- */
-function attachSoundControls(){
-  const videos = track.querySelectorAll('.storyVideo');
-  videos.forEach(video => {
-    const sec = video.closest('.story');
-    const btn = sec.querySelector('.soundBtn');
+function attachSoundControlToSection(sec){
+  if(!sec) return;
+  const video = sec.querySelector('.storyVideo');
+  const btn = sec.querySelector('.soundBtn');
+  if(!video || !btn) return;
+  if(sec._soundAttached) return; // ya atado
+  sec._soundAttached = true;
 
-    // function para detectar si hay audio (mejor intento cross-browser)
-    function detectAudio(){
-      let hasAudio = true;
-      try {
-        if (typeof video.mozHasAudio !== 'undefined') {
-          hasAudio = !!video.mozHasAudio;
-        } else if (typeof video.webkitAudioDecodedByteCount !== 'undefined') {
-          hasAudio = video.webkitAudioDecodedByteCount > 0;
-        } else {
-          // fallback: asumimos true (no hay método fiable universal)
-          hasAudio = true;
-        }
-      } catch(err){
+  function detectAudio(){
+    let hasAudio = true;
+    try {
+      if (typeof video.mozHasAudio !== 'undefined') {
+        hasAudio = !!video.mozHasAudio;
+      } else if (typeof video.webkitAudioDecodedByteCount !== 'undefined') {
+        hasAudio = video.webkitAudioDecodedByteCount > 0;
+      } else {
         hasAudio = true;
       }
-      if(btn) btn.style.display = hasAudio ? 'inline-flex' : 'none';
-    }
+    } catch(err){ hasAudio = true; }
+    btn.style.display = hasAudio ? 'inline-flex' : 'none';
+  }
 
-    // oculto inicialmente hasta detectar
-    if(btn) btn.style.display = 'none';
+  // stop propagation para evitar que el btn inicie drag en el track
+  btn.addEventListener('pointerdown', e => e.stopPropagation(), {passive:true});
+  btn.addEventListener('pointermove', e => e.stopPropagation(), {passive:true});
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    try{
+      if(video.muted){
+        video.muted = false;
+        btn.textContent = "volume_up";
+      } else {
+        video.muted = true;
+        btn.textContent = "volume_off";
+      }
+    }catch(err){}
+  });
 
-    // detecto cuando hay data suficiente para saber si hay audio
-    video.addEventListener('canplay', detectAudio);
-    // en caso de que ya haya cargado
-    setTimeout(detectAudio, 250);
+  // detect audio cuando el video puede reproducirse
+  video.addEventListener('canplay', detectAudio);
+  // intento detectar pronto
+  setTimeout(detectAudio, 250);
+}
 
-    if(btn){
-      // Evitar que el pointerdown en el botón comience el drag en track
-      btn.addEventListener('pointerdown', e => e.stopPropagation());
-      btn.addEventListener('pointermove', e => e.stopPropagation());
-      // click para alternar sonido (handler local para evitar delegaciones)
-      btn.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        try{
-          if(video.muted){
-            video.muted = false;
-            btn.textContent = "volume_up";
-          } else {
-            video.muted = true;
-            btn.textContent = "volume_off";
-          }
-        }catch(err){}
-      });
-      // icono inicial
-      btn.textContent = video.muted ? "volume_off" : "volume_up";
-    }
-
-    // Si la sección pide autounmute (autoplaySound en JSON), mostrar el botón para que el usuario lo vea
-    if(sec.dataset.autoplaySound === "1" && btn){
-      btn.style.display = 'inline-flex';
-    }
+/* attachSoundControls: recorre secciones actuales y atacha control (luego lazy loader hará el resto) */
+function attachSoundControls(){
+  const secs = track.querySelectorAll('.story');
+  secs.forEach(sec => {
+    attachSoundControlToSection(sec);
   });
 }
 
 /* -------------------------
-   FETCH & BUILD
+   FETCH & BUILD (mantengo lógica, pero ahora lazy load y setup robusto)
    ------------------------- */
 async function fetchAndBuild(silent=false){
   let data;
@@ -592,14 +677,20 @@ async function fetchAndBuild(silent=false){
   appState.recuerdos = data;
   appState.N = appState.recuerdos.length;
   totalIdxEl.textContent = String(Math.max(1,appState.N));
-  preloadFondos(appState.recuerdos);
+  // preload images (ligero) pero no vídeos
+  appState.recuerdos.forEach(x=>{
+    if(!/\.(mp4|webm|ogg|mov)$/i.test(x.fondo)){
+      const img = new Image(); img.src = x.fondo;
+    }
+  });
+
   buildTrack();
   measure();
 
-  // Attach sound controls after DOM nodes exist
+  // Attach sound controls to sections (idempotente)
   attachSoundControls();
 
-  // set initial pos from storage (mantengo tu comportamiento original si quieres)
+  // initial pos from storage
   let saved = parseInt(localStorage.getItem("lastSeenIndex") || "0");
   if(isNaN(saved) || saved<0 || saved>=appState.N) saved = 0;
   appState.pos = saved + 1;
@@ -625,19 +716,12 @@ async function fetchAndBuild(silent=false){
 
   updateCounterFromPos();
 
-  if(!silent){
-    track.classList.add("track-refreshing");
-    setTimeout(()=> track.classList.remove("track-refreshing"), 320);
-  }
-
   if(!appState.builtOnce){
     appState.builtOnce = true;
-    // Eventos de swipe en track
-    track.addEventListener("pointerdown", onPointerDown);
-    track.addEventListener("pointermove", onPointerMove);
-    track.addEventListener("pointerup", onPointerUp);
-    // También por seguridad en caso de cancel/leave
-    track.addEventListener("pointercancel", onPointerUp);
+    // EVENTS: pointer handlers en track (pointerdown sí en track, move/up en document para robustez)
+    track.addEventListener("pointerdown", onPointerDown, {passive:false});
+    // pointermove & pointerup se añaden en onPointerDown al document para evitar lost events
+    // wheel en stories
     stories.addEventListener("wheel", onWheel, {passive:true});
     slideSearch.addEventListener("change", ()=>{const v=parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v);});
     slideSearch.addEventListener("keydown", (e)=>{if(e.key==="Enter"){const v=parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v);}});
@@ -663,7 +747,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{ await fetchAndBuild(tr
 
 /* -------------------------
    PRIMERA INTERACCIÓN -> autounmute opcional
-   (solo para stories marcadas con autoplaySound:true en el JSON)
    ------------------------- */
 let firstInteractionHandled = false;
 function handleFirstInteraction(){
@@ -685,7 +768,7 @@ function handleFirstInteraction(){
 document.addEventListener("pointerdown", handleFirstInteraction, {once:true});
 
 /* -------------------------
-   ANTI-ZOOM iOS + accesibilidad
+   ANTI-ZOOM iOS + accesibilidad (mantengo)
    ------------------------- */
 document.addEventListener('gesturestart', e=>e.preventDefault());
 document.addEventListener('gesturechange', e=>e.preventDefault());
