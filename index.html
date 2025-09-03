@@ -104,10 +104,13 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   transition:transform .22s,opacity .22s;
   font-size: 22px;
 }
+#refreshBtn.disabled{
+  opacity:0.4;
+  pointer-events:none;
+}
 
 #refreshBtn.refreshing{animation:spin-continuous .9s linear infinite;}
 @keyframes spin-continuous{from{transform:rotate(0);}to{transform:rotate(360deg);}}
-/* :active visual */
 #refreshBtn:active{animation:spin-bounce .6s ease;}
 @keyframes spin-bounce{0%{transform:scale(.9) rotate(0);}50%{transform:scale(1.15) rotate(180deg);}100%{transform:scale(1) rotate(360deg);}}
 
@@ -126,8 +129,21 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   transform:translate3d(0,0,0);
 }
 .story{
-  height:100vh;height:100dvh;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
-  position:relative;padding:2rem;background-size:cover;background-position:center;will-change:transform;
+  height:100vh;
+  height:100dvh;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  position:relative;
+  padding:2rem;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+  background-size:cover;
+  background-position:center;
+  will-change:transform;
 }
 .story::after{
   content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0000004d,#000000e8);
@@ -151,9 +167,17 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,s
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
 }
 .soundBtn{
-  position:absolute;bottom:1rem;right:1rem;z-index:2;
-  background:var(--glass);border:none;border-radius:50%;padding:.5rem;
-  color:var(--text);cursor:pointer;font-size:1.8rem;
+  position:absolute;
+  bottom:calc(1rem + env(safe-area-inset-bottom));
+  right:1rem;
+  z-index:2;
+  background:var(--glass);
+  border:none;
+  border-radius:50%;
+  padding:.5rem;
+  color:var(--text);
+  cursor:pointer;
+  font-size:1.8rem;
 }
 </style>
 </head>
@@ -334,10 +358,10 @@ function crearStory(item, originalIndex){
   sec.className = "story";
   sec.dataset.original = String(originalIndex);
 
-  if(item.fondo.endsWith(".mp4") || item.fondo.endsWith(".webm") || item.fondo.endsWith(".ogg")){
+  if(/\.(mp4|webm|ogg|mov)$/i.test(item.fondo)){
     sec.innerHTML = `
       <video class="storyVideo" autoplay loop muted playsinline>
-        <source src="${item.fondo}" type="video/${item.fondo.split('.').pop()}">
+        <source src="${item.fondo}">
       </video>
       <button class="soundBtn material-symbols-outlined" aria-label="Sonido">volume_off</button>
       <div class="storyContent">
@@ -381,11 +405,11 @@ function updateCounterFromPos(){
   currentIdxEl.textContent = String(realIdx+1);
   localStorage.setItem("lastSeenIndex", realIdx);
 
-  // 👉 Ocultar botón refrescar si estamos en la primera storie
+  // 👉 Refresh bloqueado solo en la primera storie
   if(realIdx === 0){
-    refreshBtn.style.display = "none";
+    refreshBtn.classList.add("disabled");
   } else {
-    refreshBtn.style.display = "flex";
+    refreshBtn.classList.remove("disabled");
   }
 
   const currentEl = track.children[appState.pos];
@@ -525,7 +549,7 @@ async function fetchAndBuild(silent=false){
   }
 }
 refreshBtn.addEventListener("click", async ()=>{
-  if(refreshBtn.classList.contains("refreshing")) return;
+  if(refreshBtn.classList.contains("refreshing") || refreshBtn.classList.contains("disabled")) return;
   refreshBtn.classList.add("refreshing");
   await fetchAndBuild(false);
   appState.pos = 1;
@@ -544,12 +568,14 @@ document.addEventListener("click", e=>{
   if(e.target.classList.contains("soundBtn")){
     const btn = e.target;
     const video = btn.parentElement.querySelector(".storyVideo");
-    if(video.muted){
-      video.muted = false;
-      btn.textContent = "volume_up";
-    }else{
-      video.muted = true;
-      btn.textContent = "volume_off";
+    if(video){
+      if(video.muted){
+        video.muted = false;
+        btn.textContent = "volume_up";
+      }else{
+        video.muted = true;
+        btn.textContent = "volume_off";
+      }
     }
   }
 });
