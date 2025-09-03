@@ -21,13 +21,10 @@
 
 <style>
 :root{
-  /* Colores base */
   --primary:#ffa0e5;
   --text:#fff;
   --glass:rgba(0,0,0,.4);
-
-  /* Paleta de notificación (badge + sombras) */
-  --notif-bg:#ff3b30; /* rojo iOS */
+  --notif-bg:#ff3b30;
   --notif-shadow:rgba(255,59,48,0.45);
 }
 
@@ -36,9 +33,13 @@
    ------------------------- */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
 html,body{
-  width:100%;height:100dvh;min-height:100vh;
+  width:100%;
+  height:100vh;
+  height:100dvh;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  color:var(--text);overflow:hidden;background:#000;
+  color:var(--text);
+  overflow:hidden;
+  background:#000;
   -webkit-text-size-adjust:100%;
 }
 .material-symbols-outlined{font-size:2rem;}
@@ -56,25 +57,20 @@ html,body{
   position:relative;display:flex;flex-direction:column;align-items:center;z-index:1;width:100%;
   padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
 }
-
-/* Corazón + badge pegado */
 .heart{
   position:relative;
   font-size:3rem;margin-bottom:1rem;animation:heartbeat 1.8s infinite;
+  will-change:transform;
 }
 @keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
-
-/* Burbuja de nuevos al lado del corazón */
 #newBadge{
-  position:absolute;top:-8px;right:-8px;
-  background:var(--notif-bg);color:#fff;font-size:.78rem;font-weight:700;
-  border-radius:999px;padding:.15rem .45rem;display:none;opacity:0;transform:scale(.5);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;position:absolute;top:0;right:-4px;
+  background:var(--notif-bg);color:#fff;font-size:.8rem;font-weight:700;
+  border-radius:999px;padding:.20rem .40rem;display:none;opacity:0;transform:scale(.5);
   transition:transform .36s cubic-bezier(.2,.9,.3,1), opacity .36s;
   pointer-events:none;
 }
 #newBadge.show{display:inline-block;opacity:1;transform:scale(1);}
-
-/* Mensaje + dots + keypad */
 #message{font-size:1.05rem;margin-bottom:1rem;min-height:1.4rem;opacity:0;transition:opacity .3s;}
 #message.show{opacity:1;}
 #pinDots{display:flex;gap:.5rem;margin-bottom:1rem;}
@@ -92,26 +88,29 @@ html,body{
 .key:active{transform:scale(.94);}
 
 /* -------------------------
-   TOPBAR (tras desbloquear)
+   TOPBAR
    ------------------------- */
 #topbar{
   position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:25;
   display:none;justify-content:center;padding:.6rem 1rem;
 }
-.searchWrap{
-  flex:1;max-width:700px;display:flex;align-items:center;gap:.5rem;
-  background:var(--glass);backdrop-filter:blur(6px);border-radius:999px;padding:.35rem .75rem;position:relative;
-}
-.searchWrap .icon{font-size:1.35rem;opacity:.9;}
+.searchWrap{flex:1;max-width:700px;display:flex;align-items:center;gap:.5rem;background:var(--glass);backdrop-filter:blur(6px);border-radius:999px;padding:.35rem .75rem;}
+.searchWrap .icon{font-size:22px;opacity:.9;}
 #slideSearch{flex:1;border:none;outline:none;background:transparent;color:var(--text);font-size:1rem;padding:.35rem 0;}
-.counter{font-variant-numeric:tabular-nums;opacity:.9;white-space:nowrap;}
+.counter{width: 40px;text-align: center;font-size: 16px;font-variant-numeric:tabular-nums;opacity:.9;white-space:nowrap;}
 #refreshBtn{
-  background:var(--glass);border:none;border-radius:50%;width:36px;height:36px;
+  background:var(--glass);border:none;border-radius:50%;width:30px;height:30px;
   display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:.5rem;color:var(--text);
   transition:transform .22s,opacity .22s;
+  font-size: 22px;
 }
-#refreshBtn:active{transform:scale(.94);}
-#refreshBtn.refreshing{transform:rotate(360deg) scale(1.03);transition:transform .6s ease-in-out;}
+
+#refreshBtn.refreshing{animation:spin-continuous .9s linear infinite;}
+@keyframes spin-continuous{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+/* :active visual */
+#refreshBtn:active{animation:spin-bounce .6s ease;}
+@keyframes spin-bounce{0%{transform:scale(.9) rotate(0);}50%{transform:scale(1.15) rotate(180deg);}100%{transform:scale(1) rotate(360deg);}}
+
 
 /* -------------------------
    STORIES
@@ -122,34 +121,39 @@ html,body{
 }
 #track{
   width:100%;height:100%;
-  will-change:transform; /* ♻️ optimización GPU */
+  will-change:transform;
   touch-action:none;display:block;
   transform:translate3d(0,0,0);
 }
 .story{
-  height:100dvh;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+  height:100vh;height:100dvh;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
   position:relative;padding:2rem;background-size:cover;background-position:center;will-change:transform;
 }
 .story::after{
-  content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0000004d,#000000e6);
+  content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0000004d,#000000e8);
   pointer-events:none;transition:background .28s;
 }
 .storyContent{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1rem;}
-.story h2{font-family:"Dancing Script",cursive;font-size:2rem;margin-bottom:.5rem;}
-.story .date{font-size:1rem;opacity:.85;margin-bottom:1rem;}
-.story p{font-size:1.06rem;line-height:1.45;}
+.story h2{font-family:"Dancing Script",cursive;font-size:2rem;margin-bottom:.5rem;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+.story .date{font-size:1rem;opacity:.85;margin-bottom:1rem;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+.story p{font-size:1.06rem;line-height:1.45;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
 @media(min-width:768px){.story h2{font-size:2.4rem}.story p{font-size:1.15rem}}
-
-/* 🎯 Marca visual de NUEVA historia (1ª vista mantiene, 2ª vista se elimina) */
 .story.newItem::after{
   background:linear-gradient(to bottom, rgba(255,59,48,0.32), rgba(0,0,0,0.92));
   box-shadow: inset 0 0 40px var(--notif-shadow);
 }
+.track-refreshing {filter: brightness(.98) saturate(.98);transition: filter .35s ease;}
 
-/* Feedback visual al refrescar */
-.track-refreshing {
-  filter: brightness(.98) saturate(.98);
-  transition: filter .35s ease;
+/* -------------------------
+   VIDEO & SOUND BUTTON
+   ------------------------- */
+.story video.storyVideo{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+}
+.soundBtn{
+  position:absolute;bottom:1rem;right:1rem;z-index:2;
+  background:var(--glass);border:none;border-radius:50%;padding:.5rem;
+  color:var(--text);cursor:pointer;font-size:1.8rem;
 }
 </style>
 </head>
@@ -160,30 +164,28 @@ html,body{
      ------------------------- -->
 <div id="lockScreen">
   <div class="lockContent">
-    <!-- ❤️ Corazón con badge pegado arriba-derecha -->
-    <span class="material-symbols-outlined heart">
+    <span class="material-symbols-outlined heart" aria-hidden="true">
       favorite
-      <span id="newBadge" aria-hidden="true"></span>
+      <span id="newBadge"></span>
     </span>
-
     <div id="message" class="show">Ingrese código</div>
     <div id="pinDots"></div>
-    <div id="keypad"></div>
+    <div id="keypad" role="group" aria-label="Teclado numérico"></div>
   </div>
 </div>
 
 <!-- -------------------------
-     TOPBAR (tras desbloquear)
+     TOPBAR
      ------------------------- -->
 <div id="topbar">
   <div class="searchWrap">
-    <span class="material-symbols-outlined icon">search</span>
+    <span class="material-symbols-outlined icon" aria-hidden="true">search</span>
+    <label for="slideSearch" class="sr-only"></label>
     <input id="slideSearch" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Buscar recuerdo..."/>
     <div class="counter">
-      <span id="currentIdx">1</span> / <span id="totalIdx">1</span>
+      <span id="currentIdx">1</span>/<span id="totalIdx">1</span>
     </div>
-    <!-- Aquí va REFRESH (en el lugar donde antes estaba el badge) -->
-    <button id="refreshBtn" class="material-symbols-outlined" title="Refrescar">refresh</button>
+    <button id="refreshBtn" class="material-symbols-outlined" title="Refrescar" aria-label="Refrescar">refresh</button>
   </div>
 </div>
 
@@ -196,25 +198,27 @@ html,body{
 
 <script>
 /* ===========================
-   CONFIG / STATE
+   ESTADO GLOBAL
    =========================== */
-const PASSWORD_HASH = "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d"; // hash SHA-256 del PIN correcto
-const PIN_LENGTH = 6;
-const RECUERDOS_JSON = "recuerdos.json"; // ruta del JSON con historias
-
-let recuerdos = [], N = 0;
-let pageH = 0;
-/* pos es el índice dentro del track con clones:
-   0 = clone del último, 1..N = reales, N+1 = clone del primero */
-let pos = 1;
-
-let dragging = false, animating = false;
-let startY = 0, baseY = 0;
-let rafId = 0, latestDelta = 0;  // loop de arrastre para suavidad
-let velocity = 0, lastMoveTime = 0, lastMoveY = 0;
-
-let lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0"); // historias que ya existían
-let builtOnce = false; // para no sobre-registrar listeners
+const appState = {
+  PASSWORD_HASH: "4908ef154f13f297da224aceaa78fbbedfc12adf625611d8972b148c43c9e46d",
+  PIN_LENGTH: 6,
+  RECUERDOS_JSON: "recuerdos.json",
+  recuerdos: [],
+  N: 0,
+  pos: 1,
+  pageH: 0,
+  dragging: false,
+  animating: false,
+  startY: 0,
+  baseY: 0,
+  latestDelta: 0,
+  velocity: 0,
+  lastMoveTime: 0,
+  lastMoveY: 0,
+  lastKnownCount: parseInt(localStorage.getItem("lastCount") || "0"),
+  builtOnce: false
+};
 
 /* ===========================
    ELEMENTOS
@@ -233,10 +237,10 @@ const newBadge = document.getElementById("newBadge");
 const refreshBtn = document.getElementById("refreshBtn");
 
 /* ===========================
-   DOTS PARA PIN
+   PIN DOTS
    =========================== */
 const dotEls = [];
-for(let i=0;i<PIN_LENGTH;i++){
+for(let i=0;i<appState.PIN_LENGTH;i++){
   const d = document.createElement("div");
   d.className = "dot";
   dotsWrap.appendChild(d);
@@ -244,14 +248,13 @@ for(let i=0;i<PIN_LENGTH;i++){
 }
 
 /* ===========================
-   MENSAJE + FECHA
+   MENSAJE
    =========================== */
-function showMessage(text, shake=false){
+function showMessage(text){
   msg.classList.remove("show");
   setTimeout(()=>{
     msg.textContent = text;
     msg.classList.add("show");
-    if(shake){ msg.classList.add("shake"); setTimeout(()=>msg.classList.remove("shake"),420); }
   },120);
 }
 function formateaFechaES(iso){
@@ -263,29 +266,33 @@ function formateaFechaES(iso){
 }
 
 /* ===========================
-   KEYPAD Y PIN
+   KEYPAD
    =========================== */
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function attachKey(el,onPress){
-  const down=e=>{ e.preventDefault(); el.classList.add("active"); onPress(); };
-  const up=()=> el.classList.remove("active");
-  el.addEventListener("pointerdown",down,{passive:false});
-  el.addEventListener("pointerup",up);
-  el.addEventListener("pointercancel",up);
-  el.addEventListener("pointerleave",up);
-}
 function renderKeypad(){
   keypad.innerHTML = "";
   shuffle([...Array(10).keys()]).forEach(n=>{
-    const k=document.createElement("div"); k.className="key"; k.textContent=n;
-    attachKey(k,()=>enterDigit(n));
+    const k=document.createElement("div"); 
+    k.className="key"; k.textContent=n; k.setAttribute("role","button"); k.setAttribute("aria-label","Número "+n);
+    k.addEventListener("pointerdown",()=>enterDigit(n));
     keypad.appendChild(k);
   });
-  const del=document.createElement("div"); del.className="key material-symbols-outlined"; del.textContent="backspace";
-  attachKey(del, deleteDigit); keypad.appendChild(del);
+  const del=document.createElement("div"); 
+  del.className="key material-symbols-outlined"; del.textContent="backspace"; del.setAttribute("role","button"); del.setAttribute("aria-label","Borrar");
+  del.addEventListener("pointerdown", deleteDigit);
+  keypad.appendChild(del);
 }
 renderKeypad();
 
+/* Soporte teclado físico */
+document.addEventListener("keydown", e=>{
+  if(e.key >= "0" && e.key <= "9") enterDigit(e.key);
+  if(e.key === "Backspace") deleteDigit();
+});
+
+/* ===========================
+   PIN LOGIC
+   =========================== */
 let input="";
 async function hashPassword(pwd){
   const enc = new TextEncoder().encode(pwd);
@@ -293,10 +300,10 @@ async function hashPassword(pwd){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 function enterDigit(n){
-  if(input.length>=PIN_LENGTH) return;
+  if(input.length>=appState.PIN_LENGTH) return;
   input += String(n);
   dotEls[input.length-1].classList.add("filled");
-  if(input.length===PIN_LENGTH) checkPassword();
+  if(input.length===appState.PIN_LENGTH) checkPassword();
 }
 function deleteDigit(){
   if(input.length>0){
@@ -306,65 +313,67 @@ function deleteDigit(){
 }
 async function checkPassword(){
   const h = await hashPassword(input);
-  if(h === PASSWORD_HASH){
+  if(h === appState.PASSWORD_HASH){
     showMessage("✔ Desbloqueado!");
     lockScreen.style.transform = "translateY(-100%)";
     stories.style.transform = "translateY(0)";
     topbar.style.display = "flex";
-    /* 🔑 IMPORTANTE:
-       No reconstruimos aquí. El build inicial (DOMContentLoaded) ya dejó
-       preparado el badge y los .newItem. Así no “pisamos” la marca. */
   }else{
     input="";
     dotEls.forEach(d=>d.classList.remove("filled"));
     renderKeypad();
-    showMessage("Código incorrecto", true);
+    showMessage("Código incorrecto");
   }
 }
 
 /* ===========================
-   STORIES: CREACIÓN
+   STORIES
    =========================== */
 function crearStory(item, originalIndex){
   const sec = document.createElement("section");
   sec.className = "story";
-  sec.style.backgroundImage = `url('${item.fondo}')`;
   sec.dataset.original = String(originalIndex);
-  sec.innerHTML = `
-    <div class="storyContent">
-      <h2>${item.titulo}</h2>
-      <div class="date">${formateaFechaES(item.fecha)}</div>
-      <p>${item.descripcion}</p>
-    </div>`;
+
+  if(item.fondo.endsWith(".mp4") || item.fondo.endsWith(".webm") || item.fondo.endsWith(".ogg")){
+    sec.innerHTML = `
+      <video class="storyVideo" autoplay loop muted playsinline>
+        <source src="${item.fondo}" type="video/${item.fondo.split('.').pop()}">
+      </video>
+      <button class="soundBtn material-symbols-outlined" aria-label="Sonido">volume_off</button>
+      <div class="storyContent">
+        <h2>${item.titulo}</h2>
+        <div class="date">${formateaFechaES(item.fecha)}</div>
+        <p>${item.descripcion}</p>
+      </div>`;
+  }else{
+    sec.style.backgroundImage = `url('${item.fondo}')`;
+    sec.innerHTML = `
+      <div class="storyContent">
+        <h2>${item.titulo}</h2>
+        <div class="date">${formateaFechaES(item.fecha)}</div>
+        <p>${item.descripcion}</p>
+      </div>`;
+  }
   return sec;
 }
-
-/* ===========================
-   BUILD + MEDIDAS
-   =========================== */
 function buildTrack(){
   track.innerHTML = "";
-  if(N===0) return;
-  const first = crearStory(recuerdos[0], 0);
-  const last  = crearStory(recuerdos[N-1], N-1);
-  /* Clones para loop infinito: arriba = último, abajo = primero */
-  track.appendChild(last.cloneNode(true));            // index 0 (clone up)
-  recuerdos.forEach((it,idx)=> track.appendChild(crearStory(it, idx))); // index 1..N (reales)
-  track.appendChild(first.cloneNode(true));           // index N+1 (clone down)
+  if(appState.N===0) return;
+  const first = crearStory(appState.recuerdos[0], 0);
+  const last  = crearStory(appState.recuerdos[appState.N-1], appState.N-1);
+  track.appendChild(last.cloneNode(true));
+  appState.recuerdos.forEach((it,idx)=> track.appendChild(crearStory(it, idx)));
+  track.appendChild(first.cloneNode(true));
 }
-function measure(){ pageH = window.innerHeight || document.documentElement.clientHeight; }
+function measure(){ appState.pageH = window.innerHeight || document.documentElement.clientHeight; }
 function setTransformY(y, withAnim=false){
   track.style.transition = withAnim ? "transform .35s cubic-bezier(.22,.61,.36,1)" : "none";
-  track.style.transform = `translate3d(0,${y}px,0)`; // GPU
+  track.style.transform = `translate3d(0,${y}px,0)`;
 }
-
-/* ===========================
-   ÍNDICES Y CONTADOR
-   =========================== */
-function realIndexFromPos(){ // 0..N-1
-  let r = pos - 1;
+function realIndexFromPos(){
+  let r = appState.pos - 1;
   if(r < 0) r = 0;
-  if(r >= N) r = N-1;
+  if(r >= appState.N) r = appState.N-1;
   return r;
 }
 function updateCounterFromPos(){
@@ -372,165 +381,126 @@ function updateCounterFromPos(){
   currentIdxEl.textContent = String(realIdx+1);
   localStorage.setItem("lastSeenIndex", realIdx);
 
-  // ✅ Usamos el elemento en la posición actual (incluye clones) para no fallar con duplicados
-  const currentEl = track.children[pos];
+  // 👉 Ocultar botón refrescar si estamos en la primera storie
+  if(realIdx === 0){
+    refreshBtn.style.display = "none";
+  } else {
+    refreshBtn.style.display = "flex";
+  }
+
+  const currentEl = track.children[appState.pos];
   if(currentEl && currentEl.classList.contains("newItem")){
     if(currentEl.dataset.seen === "1"){
-      // 2ª vez que se ve → quitar marca
       currentEl.classList.remove("newItem");
-      // Si ya no quedan nuevos en los REALES, quitamos badge y actualizamos lastCount
-      const anyNewLeft = [...track.children].slice(1, N+1).some(el=>el.classList.contains("newItem"));
+      const anyNewLeft = [...track.children].slice(1, appState.N+1).some(el=>el.classList.contains("newItem"));
       if(!anyNewLeft){
         newBadge.classList.remove("show");
         newBadge.style.display = "none";
-        localStorage.setItem("lastCount", String(N)); // ya todo visto
+        localStorage.setItem("lastCount", String(appState.N));
       }
     }else{
-      // 1ª vez que se ve → marcar como vista una vez pero mantener rojito
       currentEl.dataset.seen = "1";
     }
   }
 }
-
-/* ===========================
-   NORMALIZACIÓN DE CLONES
-   =========================== */
 function goToPos(p, animate=true){
-  pos = p;
-  setTransformY(-pos*pageH, animate);
+  appState.pos = p;
+  setTransformY(-appState.pos*appState.pageH, animate);
   updateCounterFromPos();
 }
 function normalizeIfClone(){
-  if(pos === 0){               // está en clone de arriba → saltar al real al fondo
-    pos = N;
-    setTransformY(-pos*pageH, false);
-  }else if(pos === N+1){       // está en clone de abajo → saltar al real del inicio
-    pos = 1;
-    setTransformY(-pos*pageH, false);
+  if(appState.pos === 0){
+    appState.pos = appState.N;
+    setTransformY(-appState.pos*appState.pageH, false);
+  }else if(appState.pos === appState.N+1){
+    appState.pos = 1;
+    setTransformY(-appState.pos*appState.pageH, false);
   }
   updateCounterFromPos();
 }
-
-/* ===========================
-   DRAG / WHEEL (fluidez)
-   =========================== */
 function onPointerDown(e){
-  if(animating) return;
-  dragging = true;
-  startY = e.clientY;
-  baseY = -pos*pageH;
-  latestDelta = 0;
-  lastMoveTime = Date.now();
-  lastMoveY = e.clientY;
-  velocity = 0;
+  if(appState.animating) return;
+  appState.dragging = true;
+  appState.startY = e.clientY;
+  appState.baseY = -appState.pos*appState.pageH;
+  appState.latestDelta = 0;
+  appState.lastMoveTime = Date.now();
+  appState.lastMoveY = e.clientY;
+  appState.velocity = 0;
   track.style.transition = "none";
   e.preventDefault();
-
   const loop = ()=>{
-    if(!dragging) return;
-    // amortiguación sutil
-    const y = baseY + latestDelta*0.98;
+    if(!appState.dragging) return;
+    const y = appState.baseY + appState.latestDelta*0.98;
     track.style.transform = `translate3d(0,${y}px,0)`;
-    rafId = requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
   };
-  rafId = requestAnimationFrame(loop);
+  requestAnimationFrame(loop);
 }
 function onPointerMove(e){
-  if(!dragging) return;
-  latestDelta = e.clientY - startY;
+  if(!appState.dragging) return;
+  appState.latestDelta = e.clientY - appState.startY;
   const now = Date.now();
-  velocity = (e.clientY - lastMoveY) / Math.max(16, now - lastMoveTime);
-  lastMoveTime = now;
-  lastMoveY = e.clientY;
+  appState.velocity = (e.clientY - appState.lastMoveY) / Math.max(16, now - appState.lastMoveTime);
+  appState.lastMoveTime = now;
+  appState.lastMoveY = e.clientY;
 }
 function onPointerUp(e){
-  if(!dragging) return;
-  dragging = false;
-  cancelAnimationFrame(rafId);
-
-  const dy = e.clientY - startY;
-  const v  = velocity;
-
-  // Umbral por desplazamiento o inercia
+  if(!appState.dragging) return;
+  appState.dragging = false;
+  const dy = e.clientY - appState.startY;
+  const v  = appState.velocity;
   const shouldFlip = Math.abs(dy) > 50 || Math.abs(v) > 0.35;
-  if(shouldFlip){
-    if(dy > 0) pos--; else pos++;
-  }
-  animating = true;
-  goToPos(pos, true);
-  track.addEventListener("transitionend", onTransitionEnd, {once:true});
+  if(shouldFlip){ if(dy > 0) appState.pos--; else appState.pos++; }
+  appState.animating = true;
+  goToPos(appState.pos, true);
+  track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
 }
-function onTransitionEnd(){
-  animating = false;
-  normalizeIfClone();
-}
-
-// soporte wheel en desktop (rate-limited)
 let lastWheel=0;
 function onWheel(e){
   const now=Date.now();
-  if(animating || now - lastWheel < 300) return;
+  if(appState.animating || now - lastWheel < 300) return;
   lastWheel = now;
-  if(e.deltaY > 0) pos++; else pos--;
-  animating = true; goToPos(pos, true);
-  track.addEventListener("transitionend", onTransitionEnd, {once:true});
+  if(e.deltaY > 0) appState.pos++; else appState.pos--;
+  appState.animating = true; goToPos(appState.pos, true);
+  track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
 }
-
-/* ===========================
-   SALTO DIRECTO POR NÚMERO
-   =========================== */
 function goToIndexReal(n){
-  if(!N) return;
-  n = Math.max(1, Math.min(N, n|0));
-  pos = n; // porque 1..N son reales
-  animating = true; goToPos(pos, true);
-  track.addEventListener("transitionend", onTransitionEnd, {once:true});
+  if(!appState.N) return;
+  n = Math.max(1, Math.min(appState.N, n|0));
+  appState.pos = n;
+  appState.animating = true; goToPos(appState.pos, true);
+  track.addEventListener("transitionend", ()=>{ appState.animating=false; normalizeIfClone(); }, {once:true});
 }
-
-/* ===========================
-   FETCH + BUILD + NUEVOS
-   =========================== */
 function preloadFondos(arr){ arr.forEach(x=>{ const img=new Image(); img.src=x.fondo; }); }
-
 async function fetchAndBuild(silent=false){
   let data;
   try{
-    const res = await fetch(RECUERDOS_JSON, {cache:"no-store"});
+    const res = await fetch(appState.RECUERDOS_JSON, {cache:"no-store"});
     data = await res.json();
   }catch(_){
     data = [{titulo:"Hola",fecha:"2025-08-21",descripcion:"Agrega recuerdos.json",fondo:"momentos/foto1.jpg"}];
   }
-
-  recuerdos = data;
-  N = recuerdos.length;
-  totalIdxEl.textContent = String(Math.max(1,N));
-  preloadFondos(recuerdos);
-
+  appState.recuerdos = data;
+  appState.N = appState.recuerdos.length;
+  totalIdxEl.textContent = String(Math.max(1,appState.N));
+  preloadFondos(appState.recuerdos);
   buildTrack();
   measure();
-
-  // Restaurar última posición vista (lastSeenIndex)
   let saved = parseInt(localStorage.getItem("lastSeenIndex") || "0");
-  if(isNaN(saved) || saved<0 || saved>=N) saved = 0;
-  pos = saved + 1; // 1..N
-  setTransformY(-pos*pageH, false);
-
-  // Marcar historias NUEVAS comparando con lastCount
-  lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0");
-  const hasNew = N > lastKnownCount;
-
-  // Marcar solo en los REALES (1..N)
-  const nodes = [...track.children].slice(1, N+1);
+  if(isNaN(saved) || saved<0 || saved>=appState.N) saved = 0;
+  appState.pos = saved + 1;
+  setTransformY(-appState.pos*appState.pageH, false);
+  appState.lastKnownCount = parseInt(localStorage.getItem("lastCount") || "0");
+  const hasNew = appState.N > appState.lastKnownCount;
+  const nodes = [...track.children].slice(1, appState.N+1);
   nodes.forEach((el, iReal)=>{
-    const originalIdx = iReal; // 0..N-1
-    if(hasNew && originalIdx >= lastKnownCount) el.classList.add("newItem");
+    if(hasNew && iReal >= appState.lastKnownCount) el.classList.add("newItem");
     else el.classList.remove("newItem");
-    el.dataset.seen = ""; // reset del flag de vista (se controla por sesión)
+    el.dataset.seen = "";
   });
-
-  // Badge en lockscreen (pegado al corazón)
   if(hasNew){
-    const diff = N - lastKnownCount;
+    const diff = appState.N - appState.lastKnownCount;
     newBadge.textContent = String(diff);
     newBadge.classList.add("show");
     newBadge.style.display = "inline-block";
@@ -538,66 +508,54 @@ async function fetchAndBuild(silent=false){
     newBadge.classList.remove("show");
     newBadge.style.display = "none";
   }
-
   updateCounterFromPos();
-
   if(!silent){
     track.classList.add("track-refreshing");
     setTimeout(()=> track.classList.remove("track-refreshing"), 320);
   }
-
-  // Listeners una sola vez (track es el mismo nodo siempre)
-  if(!builtOnce){
-    builtOnce = true;
+  if(!appState.builtOnce){
+    appState.builtOnce = true;
     track.addEventListener("pointerdown", onPointerDown);
     track.addEventListener("pointermove", onPointerMove);
     track.addEventListener("pointerup", onPointerUp);
     stories.addEventListener("wheel", onWheel, {passive:true});
-
-    slideSearch.addEventListener("change", ()=>{
-      const v = parseInt(slideSearch.value, 10);
-      if(!isNaN(v)) goToIndexReal(v);
-    });
-    slideSearch.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        const v = parseInt(slideSearch.value, 10);
-        if(!isNaN(v)) goToIndexReal(v);
-      }
-    });
-
-    window.addEventListener("resize", ()=>{
-      const realIdx = realIndexFromPos();
-      measure();
-      pos = realIdx + 1;
-      setTransformY(-pos*pageH, false);
-    });
+    slideSearch.addEventListener("change", ()=>{const v=parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v);});
+    slideSearch.addEventListener("keydown", (e)=>{if(e.key==="Enter"){const v=parseInt(slideSearch.value,10); if(!isNaN(v)) goToIndexReal(v);}});
+    window.addEventListener("resize", ()=>{const realIdx=realIndexFromPos(); measure(); appState.pos=realIdx+1; setTransformY(-appState.pos*appState.pageH,false);});
   }
 }
-
-/* ===========================
-   REFRESH
-   =========================== */
 refreshBtn.addEventListener("click", async ()=>{
   if(refreshBtn.classList.contains("refreshing")) return;
   refreshBtn.classList.add("refreshing");
-  await fetchAndBuild(false);   // recarga JSON y re-aplica newItem / badge
-  pos = 1;                      // volver al primero con animación
-  animating = true; goToPos(pos, true);
+  await fetchAndBuild(false);
+  appState.pos = 1;
+  appState.animating = true; goToPos(appState.pos, true);
   track.addEventListener("transitionend", ()=>{
-    animating = false; normalizeIfClone();
+    appState.animating = false; normalizeIfClone();
     refreshBtn.classList.remove("refreshing");
   }, {once:true});
 });
+document.addEventListener("DOMContentLoaded", async ()=>{ await fetchAndBuild(true); });
 
 /* ===========================
-   INIT
+   BOTÓN DE SONIDO
    =========================== */
-document.addEventListener("DOMContentLoaded", async ()=>{
-  await fetchAndBuild(true); // Construimos una vez (badge y newItem quedan listos en lockscreen)
+document.addEventListener("click", e=>{
+  if(e.target.classList.contains("soundBtn")){
+    const btn = e.target;
+    const video = btn.parentElement.querySelector(".storyVideo");
+    if(video.muted){
+      video.muted = false;
+      btn.textContent = "volume_up";
+    }else{
+      video.muted = true;
+      btn.textContent = "volume_off";
+    }
+  }
 });
 
 /* ===========================
-   ANTIZOOM iOS (calidad UX)
+   ANTI-ZOOM iOS
    =========================== */
 document.addEventListener('gesturestart', e=>e.preventDefault());
 document.addEventListener('gesturechange', e=>e.preventDefault());
@@ -605,7 +563,7 @@ document.addEventListener('gestureend', e=>e.preventDefault());
 let lastTouchEnd=0;
 document.addEventListener('touchend', e=>{
   const now=Date.now();
-  if(now-lastTouchEnd<=300){ e.preventDefault(); } // doble tap zoom
+  if(now-lastTouchEnd<=300){ e.preventDefault(); }
   lastTouchEnd=now;
 },{passive:false});
 document.addEventListener('wheel', e=>{ if(e.ctrlKey){ e.preventDefault(); } }, {passive:false});
