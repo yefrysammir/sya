@@ -7,7 +7,7 @@
   "theme_color":"#ffa0e5",
   "orientation": "portrait",
   "icons":[
-    { "src":"https://drive.google.com/file/d/1Y_ARPiXLLkW4Xcr19cogjEI1ZvK2Exyd/view?usp=drivesdk","sizes":"192x192","type":"image/png"},
-    { "src":"https://drive.google.com/file/d/1TDaFB4VaF33SLlw73SX4k7x_tXWtxYac/view?usp=drivesdk","sizes":"512x512","type":"image/png"}
+    { "src":"https://lh3.google.com/u/0/d/1Y_ARPiXLLkW4Xcr19cogjEI1ZvK2Exyd=w543-h405-p-k-nu-iv2","sizes":"192x192","type":"image/png"},
+    { "src":"https://lh3.google.com/u/0/d/1TDaFB4VaF33SLlw73SX4k7x_tXWtxYac=w543-h405-p-k-nu-iv2","sizes":"512x512","type":"image/png"}
   ]
 }
