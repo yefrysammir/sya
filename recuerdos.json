@@ -27,12 +27,18 @@
     "titulo": "Ruleta Cinematográfica",
     "fecha": "2025-08-19",
     "descripcion": "Dia de aniversario(2), snack, salchipapa, te amos y una pelicula ganadora que nunca terminamos de entender jaja para la proxima una de naruto o pokémon.",
-    "fondo": "https://lh3.googleusercontent.com/d/1TDaFB4VaF33SLlw73SX4k7x_tXWtxYac"
+    "fondo": ""
   },
   {
     "titulo": "Labubus por los cielos",
     "fecha": "2025-08-24",
     "descripcion": "Un juego adictivo donde a veces se gana y otras te toca una mascota común jaja.",
     "fondo": "momentos/video3.mov"
+  },
+  {
+    "titulo": "Amor del bueno",
+    "fecha": "2025-08-30",
+    "descripcion": "Y alli supe que era ella lo que realmente necesitaba mi vida, su presencia se sentia, especialmente habitando mi corazón.",
+    "fondo": "momentos/video4.mov"
   }
 ] 
